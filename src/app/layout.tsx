@@ -21,19 +21,17 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <QueryProvider>
-           <div className="flex min-h-screen">
-      {/* Sidebar */}
-      <SideBar />
-
-      {/* Main content */}
-      <div className="flex flex-col flex-1 min-h-screen">
-        <NavBar />
-        <div className="p-6 flex-1">
-           {children}
-        </div>
-      </div>
-    </div>
-         
+          <div className="flex h-[100dvh]"> 
+                {/* Sidebar */}
+                <SideBar />
+                {/* Main content */}
+                <div className="flex flex-col flex-1">
+                  <NavBar />
+                  <div className="p-6 overflow-y-auto flex-1 scrollbar-hide">
+                    {children}
+                  </div>
+                </div>
+              </div>
         </QueryProvider>
       </body>
     </html>
