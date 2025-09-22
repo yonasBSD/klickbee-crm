@@ -2,6 +2,7 @@
 import React from 'react'
 import SidebarItem from '../ui/SideBarItems';
 import { Home, Settings } from 'lucide-react';
+import { sidebarItems } from '@/libs/sideBarLinks';
 
 export default function SideBar() {
     return (
@@ -20,24 +21,27 @@ export default function SideBar() {
             </div>
             <div className='w-full flex-1 p-2 overflow-auto'>
                 <div className='space-y-1 '>
-                    <SidebarItem icon={<Home size={18} />} label="Dashboard" active />
-                    <SidebarItem
-                        icon={<img src="\sideBarIcons\handshake.svg" alt="Hans Shake" className='w-4 h-4 ' />} label="Deals" />
-                    <SidebarItem icon={<img src="\sideBarIcons\layout-list.svg" alt="Hans Shake" className='w-4 h-4 ' />} label="To-Do" />
-                    <SidebarItem icon={<img src="\sideBarIcons\presentation.svg" alt="Hans Shake" className='w-4 h-4 ' />} label="Meetings" />
-                    <SidebarItem icon={<img src="\sideBarIcons\trending-up.svg" alt="Hans Shake" className='w-4 h-4 ' />} label="Prospects" />
+                    {sidebarItems.map((item) => {
+                        const lucideIconMap = {
+                            home: Home,
+                            settings: Settings,
+                        } as const;
 
-                    <SidebarItem icon={<img src="\sideBarIcons\mail.svg" alt="Hans Shake" className='w-4 h-4 ' />} label="Contact">
-                        <SidebarItem label="Customers" />
-                        <SidebarItem label="Companies" />
-                    </SidebarItem>
+                        const IconComponent = item.lucideIcon ? lucideIconMap[item.lucideIcon] : null;
+                        const iconNode = IconComponent ? (
+                            <IconComponent size={16} />
+                        ) : item.icon ? (
+                            <img src={item.icon} alt={item.label} className='w-4 h-4' />
+                        ) : undefined;
 
-                    <SidebarItem icon={<img src="\sideBarIcons\bar-chart.svg" alt="Hans Shake" className='w-4 h-4 ' />} label="Tools & Analytics">
-                        <SidebarItem label="Reports" />
-                        <SidebarItem label="Automation" />
-                    </SidebarItem>
-
-                    <SidebarItem icon={<Settings size={16} />} label="Settings" />
+                        return (
+                            <SidebarItem key={item.label} icon={iconNode} label={item.label} route={item.route}>
+                                {item.children?.map((child) => (
+                                    <SidebarItem key={child.label} label={child.label} route={child.route} />
+                                ))}
+                            </SidebarItem>
+                        );
+                    })}
                 </div>
             </div>
             {/* Bottom profile card */}

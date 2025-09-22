@@ -1,6 +1,7 @@
 "use client";
 import React, { Children, cloneElement, isValidElement, useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 
 interface SidebarItemProps {
   icon?: React.ReactNode;
@@ -9,26 +10,33 @@ interface SidebarItemProps {
   children?: React.ReactNode;
   onClick?: () => void;
   variant?: "parent" | "child";
+  route?: string;
 }
 
 const SidebarItem: React.FC<SidebarItemProps> = ({
   icon,
   label,
-  active = false,
   children,
   onClick,
   variant = "parent",
+  route,
 }) => {
   const hasChildren = Boolean(children);
   const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
+    const pathname = usePathname(); 
+
 
   const handleClick = () => {
     if (hasChildren) {
       setIsOpen((prev) => !prev);
+    } else if (route) {
+      router.push(route);
     } else if (onClick) {
       onClick();
     }
   };
+  const isActive = route && pathname === route;
 
   return (
     <div>
@@ -39,7 +47,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
         } gap-2 rounded-md ${
           variant === "child" ? "leading-[16px] text-xs" : "leading-[20px] text-sm"
         } font-normal transition-colors ${
-          active
+          isActive
             ? "bg-[var(--foreground)] text-white"
             : "text-[var(--foreground)] hover:bg-gray-100"
         }`}
