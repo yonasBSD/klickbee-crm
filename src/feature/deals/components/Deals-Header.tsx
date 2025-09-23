@@ -8,8 +8,13 @@ import { filterData, type FilterData } from "@/feature/deals/libs/filterData"
 
 
 const userOptions = [{ value: "Closed", label: "Closed Time" }]
+
+type DealsHeaderProps = {
+  view: 'table' | 'grid';
+  setView: (view: 'table' | 'grid') => void;
+}
 const searchableCategories: (keyof FilterData)[] = ["owner", "tags"];
-export function DealsHeader() {
+export function DealsHeader({ view, setView }: DealsHeaderProps) {
   const [selectedUser, setSelectedUser] = useState("Closed")
   const [showFilter, setShowFilter] = useState(false)
   const [filters, setFilters] = useState(filterData);
@@ -78,11 +83,11 @@ export function DealsHeader() {
       {/* Right section - View Switch + Action Buttons */}
       <div className="flex w-[422px] h-[36px] items-center gap-2">
         {/* List/Grid toggle */}
-        <div className="flex items-center border border-[var(--border-gray)] rounded-md bg-[#F4F4F5]">
-          <button className="p-2 border-r border-[var(--border-gray)] rounded-l-md hover:bg-muted">
+        <div className="flex items-center border border-[var(--border-gray)] rounded-md">
+          <button className={`p-2 border-r border-[var(--border-gray)] rounded-l-md hover:bg-muted cursor-pointer ${view === 'table' ? 'bg-[#F4F4F5]' : ''}`} onClick={() => setView('table')}>
             <List className="h-4 w-4" />
           </button>
-          <button className="p-2 rounded-r-md hover:bg-muted">
+          <button className={`p-2 rounded-r-md hover:bg-muted cursor-pointer ${view === 'grid' ? 'bg-[#F4F4F5]' : ''}`} onClick={() => setView('grid')}>
             <LayoutGrid className="h-4 w-4" />
           </button>
         </div>
