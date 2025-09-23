@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { ChevronUp, ChevronDown, MoreHorizontal } from 'lucide-react'
 
 export interface TableColumn<T = any> {
@@ -10,6 +10,11 @@ export interface TableColumn<T = any> {
   sortable?: boolean
   width?: string
   render?: (value: any, record: T, index: number) => React.ReactNode
+  avatar?: {
+    srcIndex: string
+    altIndex?: string
+    size?: number
+  }
 }
 
 export interface TableProps<T = any> {
@@ -30,6 +35,7 @@ export interface TableRowProps<T = any> {
   selected?: boolean
   onSelect?: (checked: boolean) => void
   selectable?: boolean
+  showLeftStickyShadow?: boolean
 }
 
 // Badge component for stage indicators
@@ -52,6 +58,13 @@ const Badge: React.FC<{
   )
 }
 
+// Fallback formatter for displaying missing/empty values as "-"
+const formatCellValue = (value: any) => {
+  if (value === null || value === undefined) return '-'
+  if (typeof value === 'string' && value.trim() === '') return '-'
+  return String(value)
+}
+
 // Table Row Component
 const TableRow = <T,>({ 
   record, 
@@ -59,7 +72,8 @@ const TableRow = <T,>({
   index, 
   selected = false, 
   onSelect, 
-  selectable = false 
+  selectable = false,
+  showLeftStickyShadow = false
 }: TableRowProps<T>) => {
   return (
     <tr className={`border-b border-[var(--border-gray)] hover:bg-gray-50`}>
@@ -85,13 +99,30 @@ const TableRow = <T,>({
       {columns.map((column) => (
         <td 
           key={column.key} 
-          className="px-4 py-3 text-sm text-gray-900"
+          className="px-6 py-3 text-sm text-gray-900 whitespace-nowrap"
           style={{ width: column.width }}
         >
-          {column.render ? column.render(record[column.dataIndex as keyof T], record, index) : String(record[column.dataIndex as keyof T] ?? '')}
+          {column.avatar ? (
+            <div className="flex items-center gap-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={String((record as any)[column.avatar.srcIndex] ?? '')}
+                alt={String(column.avatar.altIndex ? (record as any)[column.avatar.altIndex] : (record as any)[column.dataIndex])}
+                className="rounded-full object-cover"
+                style={{ height: `${column.avatar.size ?? 32}px`, width: `${column.avatar.size ?? 32}px` }}
+                width={column.avatar.size ?? 32}
+                height={column.avatar.size ?? 32}
+              />
+              <span>
+                {column.render ? column.render((record as any)[column.dataIndex], record, index) : formatCellValue((record as any)[column.dataIndex])}
+              </span>
+            </div>
+          ) : (
+            column.render ? column.render((record as any)[column.dataIndex], record, index) : formatCellValue((record as any)[column.dataIndex])
+          )}
         </td>
       ))}
-      <td className="px-4 py-3 sticky right-0 bg-white border-l border-gray-200 z-10" style={{ width: '48px' }}>
+      <td className="px-4 py-3 sticky  -right-1 bg-white z-10" style={{ width: '48px', boxShadow: showLeftStickyShadow ? 'inset 8px 0 8px -8px rgba(0,0,0,0.15)' : 'none' }}>
         <div className="flex items-center justify-center">
           <button className="p-1 hover:bg-gray-200 rounded">
             <MoreHorizontal className="h-4 w-4 text-gray-500" />
@@ -111,10 +142,12 @@ export const Table = <T,>({
   onSelectionChange,
   className = '',
   loading = false,
-  emptyText = 'No data available'
+  emptyText = '-'
 }: TableProps<T>) => {
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null)
   const [selectedKeys, setSelectedKeys] = useState<string[]>([])
+  const scrollRef = useRef<HTMLDivElement | null>(null)
+  const [showLeftStickyShadow, setshowLeftStickyShadow] = useState<boolean>(false)
 
   // Handle sorting
   const handleSort = (column: TableColumn<T>) => {
@@ -166,6 +199,23 @@ export const Table = <T,>({
   const someSelected = selectedKeys.length > 0 && selectedKeys.length < data.length
   const noneSelected = selectedKeys.length === 0
 
+  // Toggle left shadow on sticky right column when not at far right
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const update = () => {
+      const maxScrollLeft = el.scrollWidth - el.clientWidth
+      setshowLeftStickyShadow(maxScrollLeft > 0 && el.scrollLeft < maxScrollLeft - 1)
+    }
+    update()
+    el.addEventListener('scroll', update, { passive: true } as any)
+    window.addEventListener('resize', update)
+    return () => {
+      el.removeEventListener('scroll', update as any)
+      window.removeEventListener('resize', update)
+    }
+  }, [])
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -175,13 +225,15 @@ export const Table = <T,>({
   }
 
   return (
-    <div className={`bg-white shadow-sm rounded-lg border border-[var(--border-gray)] ${className}`}>
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-[var(--border-gray)]">
+     <div
+    className={`bg-white shadow-sm rounded-lg border border-[var(--border-gray)] overflow-hidden ${className}`}
+  >
+    <div ref={scrollRef} className="relative custom-scrollbar  overflow-x-auto">
+      <table className="divide-y divide-[var(--border-gray)]">
           <thead className="">
             <tr>
               {selectable && (
-                <th className="px-4 py-3 text-left">
+                <th className="px-5 py-3 text-left">
                   <div className="relative">
                     <input
                       type="checkbox"
@@ -205,7 +257,7 @@ export const Table = <T,>({
               {columns.map((column) => (
                 <th
                   key={column.key}
-                  className={`px-4 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider ${
+                  className={`px-6 py-3 text-left text-sm font-medium text-[var(--foreground)]  whitespace-nowrap ${
                     column.sortable ? 'cursor-pointer hover:bg-gray-100' : ''
                   }`}
                   style={{
@@ -220,7 +272,7 @@ export const Table = <T,>({
                 >
                   <div className="flex items-center gap-1">
                     {column.title}
-                    {column.sortable && (
+                    {column.sortable && column.key === 'dealName' && (
                       <div className="flex flex-col">
                         <ChevronUp 
                           className={`h-3 w-3 ${
@@ -242,8 +294,8 @@ export const Table = <T,>({
                 </th>
               ))}
               <th 
-                className="px-4 py-3 sticky right-0 bg-white border-l border-gray-200 z-10"
-                style={{ width: '48px' }}
+                className="px-6 py-3 sticky -right-1 bg-white z-10"
+                style={{ width: '48px', boxShadow: showLeftStickyShadow ? 'inset 8px 0 8px -10px  rgba(0,0,0,0.15)' : 'none' }}
               >
               </th>
             </tr>
@@ -268,6 +320,7 @@ export const Table = <T,>({
                   selected={selectedKeys.includes(record[rowKey])}
                   onSelect={(checked) => handleRowSelect(record[rowKey], checked)}
                   selectable={selectable}
+                  showLeftStickyShadow={showLeftStickyShadow}
                 />
               ))
             )}

@@ -6,6 +6,10 @@ export interface DealData {
   stage: 'new' | 'contacted' | 'proposal' | 'won' | 'lost'
   amount: number
   owner: string
+  ownerImage?: string
+  activity ? :string
+  tags ?:string
+  date ?:string 
 }
 
 export const dealsData: DealData[] = [
@@ -16,7 +20,11 @@ export const dealsData: DealData[] = [
     contact: 'Marc Dupont',
     stage: 'new',
     amount: 18400,
-    owner: 'Thomas Dad.'
+    owner: 'Thomas Dad.',
+    ownerImage: 'https://i.pravatar.cc/32?img=1',
+    activity: ' call-2 days' ,
+    tags:'Desing,B2B',
+    date : '15 Sep,2025'
   },
   {
     id: '2',
@@ -25,7 +33,11 @@ export const dealsData: DealData[] = [
     contact: 'Julien Perrot',
     stage: 'contacted',
     amount: 12700,
-    owner: 'Claire Brunetncdnncdnnd'
+    owner: 'Claire Brunet..',
+    ownerImage: 'https://i.pravatar.cc/32?img=2',
+     activity: ' call-2 days' ,
+    tags:'Desing,B2B',
+
   },
   {
     id: '3',
@@ -34,7 +46,12 @@ export const dealsData: DealData[] = [
     contact: 'Isabelle Moreau',
     stage: 'proposal',
     amount: 24900,
-    owner: 'Thomas De...'
+    owner: 'Thomas De...',
+    ownerImage: 'https://i.pravatar.cc/32?img=3',
+     activity: ' call-2 days' ,
+    tags:'Desing,B2B',
+    date : '15 Sep,2025'
+
   },
   {
     id: '4',
@@ -43,7 +60,11 @@ export const dealsData: DealData[] = [
     contact: 'Marc Lefebvre',
     stage: 'won',
     amount: 8000,
-    owner: 'Claire Brunet'
+    owner: 'Claire Brunet',
+    ownerImage: 'https://i.pravatar.cc/32?img=4',
+     activity: ' call-2 days' ,
+    tags:'Desing,B2B',
+    date : '15 Sep,2025'
   },
   {
     id: '5',
@@ -52,6 +73,75 @@ export const dealsData: DealData[] = [
     contact: 'Sophie Lambert',
     stage: 'lost',
     amount: 42500,
-    owner: 'Thomas De...'
-  }
+    owner: 'Thomas De...',
+    ownerImage: 'https://i.pravatar.cc/32?img=5',
+     activity: ' call-2 days' ,
+    tags:'Desing,B2B',
+    date : '15 Sep,2025'
+  },
+  {
+    id: '6',
+    dealName: 'Villa Leclerc - Phase 2',
+    company: 'Groupe Orion',
+    contact: 'Sophie Lambert',
+    stage: 'lost',
+    amount: 42500,
+    owner: 'Thomas De...',
+    ownerImage: 'https://i.pravatar.cc/32?img=6',
+    //  activity: ' call-2 days' ,
+    tags:'Desing,B2B',
+    date : '15 Sep,2025'
+  },
+  {
+    id: '7',
+    dealName: 'Villa Leclerc - Phase 2',
+    company: 'Groupe Orion',
+    contact: 'Sophie Lambert',
+    stage: 'lost',
+    amount: 42500,
+    owner: 'Thomas De...',
+    ownerImage: 'https://i.pravatar.cc/32?img=7',
+     activity: ' call-2 days' ,
+    tags:'Desing,B2B',
+    date : '15 Sep,2025'
+  },
+  {
+    id: '8',
+    dealName: 'Villa Leclerc - Phase 2',
+    company: 'Groupe Orion',
+    contact: 'Sophie Lambert',
+    stage: 'lost',
+    amount: 42500,
+    owner: 'Thomas De...',
+    ownerImage: 'https://i.pravatar.cc/32?img=8',
+     activity: ' call-2 days' ,
+    tags:'Desing,B2B',
+    date : '15 Sep,2025'
+  },
+  {
+    id: '9',
+    dealName: 'Villa Leclerc - Phase 2',
+    company: 'Groupe Orion',
+    contact: 'Sophie Lambert',
+    stage: 'lost',
+    amount: 42500,
+    owner: 'Thomas De...',
+    ownerImage: 'https://i.pravatar.cc/32?img=9',
+     activity: ' call-2 days' ,
+    tags:'Desing,B2B',
+    date : '15 Sep,2025'
+  },
+  {
+    id: '10',
+    dealName: 'Villa Leclerc - Phase 2',
+    company: 'Groupe Orion',
+    contact: 'Sophie Lambert',
+    stage: 'lost',
+    amount: 42500,
+    owner: 'Thomas De...',
+    ownerImage: 'https://i.pravatar.cc/32?img=10',
+     activity: ' call-2 days' ,
+    tags:'Desing,B2B',
+    date : '15 Sep,2025'
+  },
 ]
