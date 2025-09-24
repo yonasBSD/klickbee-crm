@@ -8,7 +8,7 @@ import AgendaCard from './AgendaCard'
 
 const DashBoard = () => {
   return (
-    <div className='flex flex-col gap-[16px]'>
+    <div className='p-6 flex flex-col gap-[16px]'>
        <DashboardHeader/>
           <DashboardMetrics/>
         <div className='grid grid-cols-1 xl:grid-cols-[60.5%_30%] 2xl:grid-cols-[70%_30%] gap-[16px]'>

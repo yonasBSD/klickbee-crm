@@ -27,7 +27,7 @@ export default function RootLayout({
                 {/* Main content */}
                 <div className="flex flex-col flex-1">
                   <NavBar />
-                  <div className="p-6 overflow-y-auto flex-1 scrollbar-hide">
+                  <div className=" overflow-y-auto flex-1 scrollbar-hide">
                     {children}
                   </div>
                 </div>
