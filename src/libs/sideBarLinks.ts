@@ -1,25 +1,26 @@
 export interface SidebarLink {
   label: string;
-  icon?: string;      
+  icon?: string;
   route?: string;
   children?: SidebarLink[];
   lucideIcon?: "home" | "settings";
 }
 
 export const sidebarItems: SidebarLink[] = [
-  {  
-   label: "Dashboard",
-   lucideIcon: "home", 
-   route: "/"
-    },
-  { 
+  {
+    label: "Dashboard",
+    lucideIcon: "home",
+    route: "/"
+  },
+  {
     label: "Deals",
     icon: "/sideBarIcons/handshake.svg",
-    route: "/deals" 
-    },
-  { 
+    route: "/deals"
+  },
+  {
     label: "To-Do",
     icon: "/sideBarIcons/layout-list.svg",
+<<<<<<< HEAD
    route: "/todo" 
     },
   { 
@@ -29,20 +30,31 @@ export const sidebarItems: SidebarLink[] = [
    },
   { 
     label: "Prospects", 
+=======
+    route: "/todo"
+  },
+  {
+    label: "Meetings",
+    icon: "/sideBarIcons/presentation.svg",
+    // route: "/meetings"
+  },
+  {
+    label: "Prospects",
+>>>>>>> f93da08b6dc93343ef9c56a211bd6ef13d132608
     icon: "/sideBarIcons/trending-up.svg",
-    // route: "/prospects"
+    route: "/prospects"
    },
   {
     label: "Contact",
     icon: "/sideBarIcons/mail.svg",
     children: [
-      { 
+      {
         label: "Customers",
-        // route: "/contact/customers"
+        route: "/contact/customers"
        },
       { 
         label: "Companies", 
-        // route: "/contact/companies"
+        route: "/contact/companies"
        },
     ],
   },
@@ -50,19 +62,33 @@ export const sidebarItems: SidebarLink[] = [
     label: "Tools & Analytics",
     icon: "/sideBarIcons/bar-chart.svg",
     children: [
-      { 
-        label: "Reports", 
+      {
+        label: "Reports",
         // route: "/tools/reports"
-       },
-      { 
-        label: "Automation", 
+      },
+      {
+        label: "Automation",
         // route: "/tools/automation" 
       },
     ],
   },
-  { 
-    label: "Settings", 
-    lucideIcon: "settings", 
-    // route: "/settings" 
+  {
+    label: "Settings",
+    lucideIcon: "settings",
+    children: [
+      {
+        label: "AI",
+        route: "/settings/ai"
+      },
+      {
+        label: "Users",
+        route: "/settings/users"
+      },
+      {
+        label: "Email",
+        route: "/settings/email"
+      },
+    ],
   },
+
 ];
