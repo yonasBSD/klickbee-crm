@@ -99,7 +99,7 @@ const TableRow = <T,>({
       {columns.map((column) => (
         <td 
           key={column.key} 
-          className="px-6 py-3 text-sm text-gray-900 whitespace-nowrap"
+          className="px-6 py-3 text-sm text-[var(--foreground)] whitespace-nowrap"
           style={{ width: column.width }}
         >
           {column.avatar ? (
