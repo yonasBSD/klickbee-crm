@@ -3,9 +3,10 @@ import Filter from "@/components/filter"
 import { Button } from "@/components/ui/Button"
 import { DropDown } from "@/components/ui/DropDown"
 import { Search, LayoutGrid, List, Download, Upload, Plus } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { filterData, type FilterData } from "../libs/fillterData"
 import CustomerModal from "./CustomersModel"
+import { useSearchParams } from "next/navigation"
 
 
 const statusOptions = [
@@ -23,6 +24,14 @@ export function CustomerHeader() {
 
   const [searchQueries, setSearchQueries] = useState<Record<string, string>>({});
   const [showNewCustomers, setShowNewCustomers] = useState<boolean>(false);
+      const searchParams = useSearchParams()
+      
+       useEffect(() => {
+          const newParam = searchParams.get("new")
+          if (newParam === "contact") {
+            setShowNewCustomers(true)
+          }
+        }, [searchParams])
 
   const handleToggle = (category: keyof FilterData, id: string) => {
     setFilters((prev) => ({

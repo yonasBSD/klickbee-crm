@@ -82,15 +82,13 @@ export const customerColumns: TableColumn<Companie>[] = [
 
 export default function Companies () {
   return (
-    <div>
+    <div className='overflow-x-hidden'>
       <CompaniesHeader/>
- <div className='py-8 px-6 xl:w-[1015px] 2xl:w-full'>
-            <div className='rounded-lg border border-[var(--border-gray)] bg-white shadow-sm'>
+ <div className='py-8 px-6 overflow-x-hidden'>
              
                 <Table columns={customerColumns} data={companiesData} selectable={true} />
             </div>
           </div>
-    </div>
   )
 }
 

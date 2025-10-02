@@ -1,15 +1,16 @@
 "use client"
-import { Button } from "@/components/ui/Button"
-import { DropDown } from "@/components/ui/DropDown"
-import { Search, LayoutGrid, List, Plus, Calendar } from "lucide-react"
-import { useState } from "react"
-import TodoModel from "./TodoModel"
+  import { Button } from "@/components/ui/Button"
+  import { DropDown } from "@/components/ui/DropDown"
+  import { Search, LayoutGrid, List, Plus } from "lucide-react"
+  import { useEffect, useState } from "react"
+  import TodoModel from "./TodoModel"
+  import { useSearchParams } from "next/navigation"
+  import { CalendarDropDown } from "@/components/ui/CalendarDropDown"
 
 // Filter options
 const statusOptions = [
   { value: "all-status", label: "All Status" },
   { value: "in_progress", label: "In Progress" },
-  { value: "completed", label: "Completed" },
   { value: "closed", label: "Closed" },
 ]
 
@@ -38,6 +39,20 @@ export function TodoHeader({ view, setView }: TodoHeaderProps) {
   const [ownerOptionsUser, setownerOptionsUser] = useState('all-owner')
   const [priorityOptionsUser, setpriorityOptionsUser] = useState('all-priority')
     const [showNewTask, setShowNewTask] = useState<boolean>(false);
+      const searchParams = useSearchParams()
+      // Date filter state
+      const [dueDate, setDueDate] = useState<Date | null>(new Date())
+      const dateLabel = dueDate
+        ? new Intl.DateTimeFormat('en-US', { month: 'long', day: '2-digit', year: 'numeric' }).format(dueDate)
+        : 'Select date'
+    
+     useEffect(() => {
+        const newParam = searchParams.get("new")
+        if (newParam === "task") {
+          setShowNewTask(true)
+        }
+      }, [searchParams])
+    
 
   return (
     <div
@@ -83,13 +98,13 @@ export function TodoHeader({ view, setView }: TodoHeaderProps) {
           onChange={setpriorityOptionsUser}
           className="h-[36px] w-auto "
         />
-        <div className="relative">
-          <input
-            type="date"
-
-            className=" h-[36px] px-2 bg-card border border-[var(--border-gray)] rounded-md text-sm outline-none shadow-sm"
-          />
-        </div>
+        <CalendarDropDown
+          className="h-[36px]"
+          label={dateLabel}
+          value={dueDate}
+          onChange={(d) => setDueDate(d)}
+          triggerIcon="calendar"
+        />
 
       </div>
 

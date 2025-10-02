@@ -22,18 +22,20 @@ const columns: TableColumn<DealData>[] = [
 const Deals = () => {
   const [view, setView] = React.useState<'table' | 'grid'>('table');
   return (
-   <div>
+   <div className='overflow-x-hidden'>
     <DealsHeader view={view} setView={(view: 'table' | 'grid') => setView(view)} />
-    <div className='py-8 px-6 xl:w-[1015px] 2xl:w-full'>
-      <div className='rounded-lg border border-[var(--border-gray)] bg-white shadow-sm'>
+    <div className='py-8 px-6 overflow-x-hidden'>
+     
         {view === 'table' ? (
-          <Table columns={columns} data={dealsData} selectable={true} />
+        
+  
+        <Table columns={columns} data={dealsData} selectable={true} />
         ) : (
           <GridView  />
         )}
       </div>
     </div>
-   </div>
+
   );
 };
 

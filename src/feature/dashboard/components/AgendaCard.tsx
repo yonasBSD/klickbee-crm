@@ -3,16 +3,19 @@
 import React from "react"
 import { getAgenda } from "../libs/AgendaData"
 import { CalendarDays, Clock } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 export default function AgendaCard() {
   const items = getAgenda()
+  const router = useRouter()
 
   return (
     <section className="xl:w-[367px] 2xl:w-auto  h-[500px] shadow-sm rounded-xl border border-[var(--border-gray)] bg-white flex flex-col">
       {/* Header */}
       <div className="flex items-center h-[56px] justify-between p-[16px] border-b border-[var(--border-gray)]">
         <h3 className="text-sm font-semibold text-[var(--foreground)]">Agenda (12)</h3>
-        <button className="text-xs font-medium text-[var(--foreground)] hover:text-gray-700">
+        <button onClick={() => router.push("/meetings")}
+        className="text-xs font-medium text-[var(--foreground)] hover:text-gray-700">
           See Details
         </button>
       </div>
@@ -22,7 +25,7 @@ export default function AgendaCard() {
         {items.map((item) => (
           <div
             key={item.id}
-            className="flex h-[62px] w-[330px] items-center justify-between"
+            className="flex h-[62px] w-full items-center justify-between"
           >
             {/* Left side: title + date/time */}
             <div className="flex-1 min-w-0 flex flex-col gap-1.5">
@@ -44,7 +47,7 @@ export default function AgendaCard() {
             </div>
 
             {/* Right side: avatars */}
-            <div className="flex -space-x-2 ml-3 mt-3">
+            <div className="flex -space-x-2 ml-3">
               {item.images.map((img, index) => (
                 <img
                   key={index}

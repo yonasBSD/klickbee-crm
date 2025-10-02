@@ -1,11 +1,12 @@
 "use client"
 import { Button } from "@/components/ui/Button"
-import { DropDown } from "@/components/ui/DropDown"
+import { CalendarDropDown } from "@/components/ui/CalendarDropDown"
 import { Search, LayoutGrid, List, Download, Upload, Plus } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Filter from "@/components/filter"
 import { filterData, type FilterData } from "@/feature/deals/libs/filterData"
 import DealModal from "./DealModal"
+import { useSearchParams } from "next/navigation"
 
 
 const userOptions = [{ value: "Closed", label: "Closed Time" }]
@@ -21,6 +22,15 @@ export function DealsHeader({ view, setView }: DealsHeaderProps) {
   const [filters, setFilters] = useState(filterData);
   const [searchQueries, setSearchQueries] = useState<Record<string, string>>({});
   const [showNewDealer, setShowNewDealer] = useState<boolean>(false);
+  const [closedDate, setClosedDate] = useState<Date | null>(null);
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    const newParam = searchParams.get("new")
+    if (newParam === "deal") {
+      setShowNewDealer(true)
+    }
+  }, [searchParams])
 
   // ✅ Toggle checkbox
   const handleToggle = (category: keyof FilterData, id: string) => {
@@ -58,10 +68,9 @@ export function DealsHeader({ view, setView }: DealsHeaderProps) {
         </div>
 
         {/* Dropdown */}
-        <DropDown
-          options={userOptions}
-          value={selectedUser}
-          onChange={setSelectedUser}
+        <CalendarDropDown
+          value={closedDate}
+          onChange={setClosedDate}
           className="h-[36px] min-w-[120px]"
         />
 

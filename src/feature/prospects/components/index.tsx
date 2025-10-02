@@ -78,15 +78,14 @@ export const prospectsColumns: TableColumn<Contact>[] = [
 
 export default function Prospects () {
   return (
-    <div>
+    <div className='overflow-x-hidden'>
       <ProspectHeader/>
-       <div className='py-8 px-6 xl:w-[1015px] 2xl:w-full'>
-            <div className='rounded-lg border border-[var(--border-gray)] bg-white shadow-sm'>
+       <div className='py-8 px-6 overflow-x-hidden'>
              
                 <Table columns={prospectsColumns} data={prospectsData} selectable={true} />
             </div>
           </div>
-         </div>
+        
   )
 }
 

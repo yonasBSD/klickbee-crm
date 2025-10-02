@@ -38,6 +38,23 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   };
   const isActive = route && pathname === route;
 
+  // Ensure image-based icons turn white when active. Lucide icons already follow currentColor.
+  const renderedIcon = (() => {
+    if (!icon || !isValidElement(icon)) return icon;
+
+    // Determine if the provided icon is an <img> and add filter when active
+    const isImgTag = (icon as React.ReactElement).type === 'img';
+    if (isImgTag) {
+      const imgEl = icon as React.ReactElement<{ className?: string }>;
+      const existing = imgEl.props?.className ?? '';
+      const activeFilter = isActive ? ' brightness-0 invert' : '';
+      return cloneElement(imgEl, {
+        className: `${existing}${activeFilter}`.trim(),
+      });
+    }
+    return icon;
+  })();
+
   return (
     <div>
       <button
@@ -54,7 +71,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
         aria-expanded={hasChildren ? isOpen : undefined}
       >
         <span className="flex items-center gap-2 w-full">
-          {icon}
+          {renderedIcon}
           <span>{label}</span>
         </span>
         {hasChildren && (

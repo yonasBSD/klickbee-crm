@@ -15,7 +15,7 @@ export default function TodoGridView() {
   }, [])
 
   return (
-    <main className="p-4 bg-[#F4F4F5]">
+    <main className="p-4 bg-[#F4F4F5] rounded-lg border border-[var(--border-gray)] shadow-sm">
       <GridView
         items={tasks}
         groupBy={(t: TaskData) => t.status ?? 'To-Do'}

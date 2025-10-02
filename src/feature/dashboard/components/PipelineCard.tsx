@@ -2,12 +2,12 @@
 
 import React from "react"
 import { getPipelineData } from "../libs/PipelineData"
-
+import { useRouter } from "next/navigation"
 const CHART_HEIGHT = 236
 
 export function PipelineCard() {
   const { title, stages, conversionRates } = getPipelineData()
-  
+  const router =useRouter()
 
 
 
@@ -16,7 +16,9 @@ export function PipelineCard() {
     <section className="rounded-xl  h-[488px] border border-[var(--border-gray)] bg-white">
       <div className="flex h-[58px] items-center justify-between p-[16px] border-b border-[var(--border-gray)]">
         <h3 className="text-sm font-semibold text-[var(--foreground)]">{title}</h3>
-        <button className="text-xs font-medium text-[var(--foreground)]">See Details</button>
+        <button  onClick={() => router.push("/prospects")}
+         className="text-xs font-medium text-[var(--foreground)] hover:text-gray-600">
+          See Details</button>
       </div>
 
 <div className="p-4">

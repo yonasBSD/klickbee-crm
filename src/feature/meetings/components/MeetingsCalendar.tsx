@@ -1,4 +1,7 @@
 import { useMeetings } from "../hooks/useMeetings";
+import { useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+
 import { AddMeetingModal } from "./AddMeetingModal";
 import { CalendarHeader } from "./CalendarHeader";
 import { DailyView } from "./CalendarViews/DailyView";
@@ -28,6 +31,15 @@ export const MeetingsCalendar: React.FC = () => {
     openAddMeeting,
     closeAddMeeting,
   } = useMeetings();
+  const searchParams = useSearchParams();
+
+  // Auto-open Add Meeting when navigated with ?new=meeting
+  useEffect(() => {
+    const newParam = searchParams.get("new");
+    if (newParam === "meeting") {
+      openAddMeeting();
+    }
+  }, [searchParams, openAddMeeting]);
 
   const renderCalendarView = () => {
     const viewProps = {

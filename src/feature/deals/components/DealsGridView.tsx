@@ -33,7 +33,7 @@ export default function DealsGridView() {
   }
 
   return (
-    <main className="p-4 bg-[#F4F4F5]">
+    <main className="p-4 bg-[#F4F4F5] rounded-lg border border-[var(--border-gray)] shadow-sm">
       <GridView
         items={deals as Deal[]}
         groupBy={(d: Deal) => {

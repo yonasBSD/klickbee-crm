@@ -11,6 +11,7 @@ export interface DealData {
   tags ?:string
   date ?:string 
   priority? : string
+  notes?:string
 }
 
 export const dealsData: DealData[] = [
@@ -26,7 +27,9 @@ export const dealsData: DealData[] = [
     activity: ' call-2 days' ,
     tags:'Desing,B2B',
     date : '15 Sep,2025',
-    priority: 'VIP, High Priority'
+    priority: 'VIP, High Priority',
+    notes:'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+
   },
   {
     id: '2',
@@ -40,8 +43,8 @@ export const dealsData: DealData[] = [
      activity: ' call-2 days' ,
     tags:'Desing,B2B',
      date : '15 Sep,2025',
-    priority: 'VIP, High Priority'
-
+    priority: 'VIP, High Priority',
+ notes:'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
 
   },
   {
@@ -56,6 +59,7 @@ export const dealsData: DealData[] = [
      activity: ' call-2 days' ,
     tags:'Desing,B2B',
     date : '15 Sep,2025',
+     notes:'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
     priority: 'VIP, High Priority'
 
   },
@@ -71,6 +75,7 @@ export const dealsData: DealData[] = [
      activity: ' call-2 days' ,
     tags:'Desing,B2B',
     date : '15 Sep,2025',
+      notes:'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
     priority: 'VIP, High Priority'
   },
   {
@@ -85,6 +90,7 @@ export const dealsData: DealData[] = [
      activity: ' call-2 days' ,
     tags:'Desing,B2B',
     date : '15 Sep,2025',
+      notes:'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
     priority: 'VIP, High Priority'
   },
   {
@@ -99,6 +105,7 @@ export const dealsData: DealData[] = [
     //  activity: ' call-2 days' ,
     tags:'Desing,B2B',
     date : '15 Sep,2025',
+      notes:'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
     priority: 'VIP, High Priority'
   },
   {
@@ -113,6 +120,7 @@ export const dealsData: DealData[] = [
      activity: ' call-2 days' ,
     tags:'Desing,B2B',
     date : '15 Sep,2025',
+      notes:'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
     priority: 'VIP, High Priority'
   },
   {
@@ -127,6 +135,7 @@ export const dealsData: DealData[] = [
      activity: ' call-2 days' ,
     tags:'Desing,B2B',
     date : '15 Sep,2025',
+      notes:'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
     priority: 'VIP, High Priority'
   },
   {
@@ -141,6 +150,7 @@ export const dealsData: DealData[] = [
      activity: ' call-2 days' ,
     tags:'Desing,B2B',
     date : '15 Sep,2025',
+      notes:'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
     priority: 'VIP, High Priority'
   },
   {

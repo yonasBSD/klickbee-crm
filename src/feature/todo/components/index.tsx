@@ -91,10 +91,9 @@ const taskColumns: TableColumn<TaskData>[] = [
 export  default  function TODO  () {
   const [view, setView] = React.useState<'table' | 'grid'>('table');
    return (
-    <div>
+    <div className='overflow-x-hidden'>
      <TodoHeader view={view} setView={(view: 'table' | 'grid') => setView(view)} />
-     <div className='py-8 px-6 xl:w-[1015px] 2xl:w-full'>
-       <div className='rounded-lg border border-[var(--border-gray)] bg-white shadow-sm'>
+     <div className='py-8 px-6 overflow-x-hidden'>
          {view === 'table' ? (
           <Table columns={taskColumns} data={tasksData} selectable={true} />
          ) : 
@@ -104,7 +103,6 @@ export  default  function TODO  () {
          }
        </div>
      </div>
-    </div>
   )
 }
 

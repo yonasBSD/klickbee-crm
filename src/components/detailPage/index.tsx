@@ -55,7 +55,7 @@ const DetailModal: React.FC<DetailModalProps> = ({
         <div className="p-6 space-y-8">
           {/* Dynamic Details */}
           <section>
-            <h3 className="font-medium text-gray-900 mb-4">Details</h3>
+            <h3 className="font-medium text-gray-900 mb-4">Project Overview</h3>
             <div className="space-y-3 text-sm text-gray-700">
               {details.map((item, idx) => (
                 <div

@@ -1,5 +1,7 @@
+"use client";
 import React from 'react'
 import { getMetricsData } from "../libs/MetricsData"
+import { useRouter } from "next/navigation"
 
 const colorClasses = [
   // icon circle bg and text colors per metric (index-based)
@@ -11,6 +13,8 @@ const colorClasses = [
 
 const DashboardMetrics = () => {
   const metrics = getMetricsData()
+    const router = useRouter();
+
 
   return (
     <section className=" h-[156px] w-auto shadow-sm rounded-xl border border-[var(--border-gray)] bg-white opacity-100 ">
@@ -28,7 +32,8 @@ const DashboardMetrics = () => {
               </div>
             </div>
 
-            <button className="border-t hover:bg-gray-50  border-[var(--border-gray)] leading-[20px] px-4 py-3 flex items-center justify-between text-sm font-semiblod text-muted-foreground">
+            <button  onClick={() => router.push("/deals")}
+            className="border-t hover:bg-gray-50  border-[var(--border-gray)] leading-[20px] px-4 py-3 flex items-center justify-between text-sm font-semiblod text-muted-foreground">
               <span>See Details</span>
               <span><img src="\icons\arrow-right.svg" alt="Arrow-Right" /></span>
             </button>

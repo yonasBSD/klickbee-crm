@@ -2,6 +2,7 @@
 import { Plus } from "lucide-react"
 import { DropDown } from "../../../components/ui/DropDown"
 import { useState, useRef, useEffect } from "react"
+ import { useRouter } from "next/navigation"
 
 const userOptions = [
   { value: "all", label: "All Users" },
@@ -11,9 +12,9 @@ const userOptions = [
 
 const statusOptions = [
   { value: "all", label: "All Status" },
-  { value: "new", label: "New" },
-  { value: "in-progress", label: "In Progress" },
-  { value: "completed", label: "Completed" },
+  { value: "7days", label: "Last 7 days" },
+  { value: "28days", label: "Last 28 days" },
+  { value: "365days", label: "Last 365 days" },
 ]
 
 const timePeriodOptions = [
@@ -27,6 +28,9 @@ export function DashboardHeader() {
   const [selectedUser, setSelectedUser] = useState("all")
   const [selectedStatus, setSelectedStatus] = useState("all")
   const [selectedTimePeriod, setSelectedTimePeriod] = useState("this-month")
+  const [actionLabel, setActionLabel] = useState("New Deal") // <-- new state
+  const router = useRouter()
+
 
   // state for arrow dropdown
   const [menuOpen, setMenuOpen] = useState(false)
@@ -43,6 +47,29 @@ export function DashboardHeader() {
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
+  // Navigate based on the selected primary action
+  const handlePrimaryAction = () => {
+    switch (actionLabel) {
+      case "New Deal":
+        router.push("/deals?new=deal")
+        break
+      case "New Task":
+        // TODO: update with the correct route once available
+        router.push("/todo?new=task")
+        break
+      case "New Meeting":
+        // TODO: update with the correct route once available
+        router.push("/meetings?new=meeting")
+        break
+      case "New Contact":
+        // TODO: update with the correct route once available
+        router.push("/contact/customers?new=contact")
+        break
+      default:
+        break
+    }
+  }
+
   return (
     <header>
       <div className="flex items-center justify-between h-9">
@@ -58,9 +85,9 @@ export function DashboardHeader() {
 
         {/* New Deal + Arrow */}
         <div className="relative flex min-w-[155px] h-9 border border-[var(--border-gray)] rounded-lg bg-white shadow-sm" ref={menuRef}>
-          <button className="flex items-center gap-1.5 justify-center px-4 hover:bg-gray-50 transition-colors whitespace-nowrap">
+          <button onClick={handlePrimaryAction} className="flex items-center gap-1.5 justify-center px-4 hover:bg-gray-50 transition-colors whitespace-nowrap">
             <Plus size={16} className="text-[var(--foreground)]" />
-            <span className="text-sm text-[var(--foreground)] tracking-[0%]">New Deal</span>
+            <span className="text-sm text-[var(--foreground)] tracking-[0%]">{actionLabel}</span>
           </button>
 
           <div className="w-px h-full bg-gray-300"></div>
@@ -75,15 +102,20 @@ export function DashboardHeader() {
           {/* Dropdown menu */}
           {menuOpen && (
             <div className="absolute w-[224px] right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-md z-20">
-              <button className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
-                New Task
-              </button>
-              <button className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
-                New Meeting
-              </button>
-              <button className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
-                New Contact
-              </button>
+              {["New Task", "New Meeting", "New Contact", "New Deal"]
+                .filter((item) => item !== actionLabel) // <-- exclude active one
+                .map((item) => (
+                  <button
+                    key={item}
+                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                    onClick={() => {
+                      setActionLabel(item) // update label
+                      setMenuOpen(false)   // close menu
+                    }}
+                  >
+                    {item}
+                  </button>
+                ))}
             </div>
           )}
         </div>

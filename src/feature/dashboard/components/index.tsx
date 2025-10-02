@@ -1,3 +1,4 @@
+"use client";
 import React from 'react'
 import { DashboardHeader } from './DashBoard-header'
 import DashboardMetrics from './DashboardMetrics'
@@ -11,7 +12,7 @@ const DashBoard = () => {
     <div className='p-6 flex flex-col gap-[16px]'>
        <DashboardHeader/>
           <DashboardMetrics/>
-        <div className='grid grid-cols-1 xl:grid-cols-[60.5%_30%] 2xl:grid-cols-[70%_30%] gap-[16px]'>
+        <div className='grid grid-cols-1 xl:grid-cols-[2fr_1fr] gap-[16px]'>
           <div className='flex flex-col gap-[16px]'>
             <PipelineCard/>
             <RecentActivitiesCard/>

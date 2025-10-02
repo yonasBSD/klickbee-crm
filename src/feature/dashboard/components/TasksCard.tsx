@@ -3,16 +3,23 @@
 import React from "react"
 import { getTasksOverview } from "../libs/TasksData"
 import { AlertTriangle, Calendar } from "lucide-react"
+import { useRouter } from "next/navigation"
+
 
 export default function TasksCard() {
   const { lateAssignmentsNotice, tasks, progress } = getTasksOverview()
+  const router = useRouter()
+    const handleClick = () => {
+    router.push("/todo"); // navigate to your route
+  };
 
   return (
     <section className=" xl:w-[367px] 2xl:w-auto h-[488px] rounded-xl border border-[var(--border-gray)] shadow-sm bg-white flex flex-col">
       {/* Header */}
       <div className="flex items-center border-b border-[var(--border-gray)] h-[56px] justify-between p-[16px]">
         <h3 className="text-sm font-semibold text-foreground">Tasks (240)</h3>
-        <button className="text-xs font-medium text-muted-foreground">See Details</button>
+        <button onClick={handleClick}
+         className="text-xs font-medium text-muted-foreground hover:text-gray-600">See Details</button>
       </div>
 
       {/* Scrollable content (notice + tasks) */}
@@ -23,7 +30,8 @@ export default function TasksCard() {
             <AlertTriangle className="h-4 w-4" />
             <span>{lateAssignmentsNotice}</span>
           </div>
-          <button className="underline">Details</button>
+          <button onClick={handleClick}
+          className="underline">Details</button>
         </div>
 
         {/* Tasks list */}

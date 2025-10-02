@@ -81,7 +81,7 @@ export function DropDown({
       {isOpen && (
         <ul
           role="listbox"
-          className="absolute z-20 mt-1  h-[132px]  rounded-md border border-[var(--border-gray)] bg-white shadow-md pt-1 px-1"
+          className="absolute z-20 mt-1 rounded-md border border-[var(--border-gray)] bg-white shadow-md py-1 px-1"
         >
           {options.map((option) => {
             const isSelected = option.value === value
@@ -95,7 +95,7 @@ export function DropDown({
                   onChange?.(option.value)
                   setIsOpen(false)
                 }}
-                className={`cursor-pointer w-[216px] h-[32px] rounded-sm px-2 py-1.5 text-[16px] leading-[24px] text-gray-900 hover:bg-gray-50 ${
+                className={`cursor-pointer w-[216px] h-[32px] rounded-sm px-2 py-1.5 text-[14px] leading-[24px] text-sm leading-[20px] hover:bg-gray-50 ${
                   isSelected ? "bg-gray-50" : ""
                 }`}
               >
