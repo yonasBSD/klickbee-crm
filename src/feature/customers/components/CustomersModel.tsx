@@ -12,6 +12,28 @@ type DealSlideOverProps = {
 }
 
 export default function CustomerSlideOver({ open, onClose }: DealSlideOverProps) {
+  const handleSubmit = async (values: any) => {
+    try {
+      // Call your API to create a new customers
+      const response = await fetch("/api/admin/customers", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(values),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create customers");
+      }
+
+      const data = await response.json();
+      console.log("Customers created successfully:", data);
+      onClose();
+    } catch (error) {
+      console.error("Error creating customers:", error);
+    }
+  }
   return (
     <Modal open={open} onClose={onClose}>
       <aside
@@ -39,10 +61,7 @@ export default function CustomerSlideOver({ open, onClose }: DealSlideOverProps)
         <div className="flex-1 overflow-y-auto ">
           <CustomerForm
             onCancel={onClose}
-            onSubmit={(values) => {
-              console.log("[v0] Deal submitted:", values)
-              onClose()
-            }}
+            onSubmit={(values) => handleSubmit(values)}
           />
         </div>
       </aside>
