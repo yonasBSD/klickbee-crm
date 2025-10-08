@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/Button"
 import { cn } from "@/libs/utils"
 import Modal from "@/components/ui/Modal"
 import CustomerForm from "./CustomersForm"
+import { useCustomersStore } from "../stores/useCustomersStore"
+import toast from "react-hot-toast"
 
 type DealSlideOverProps = {
   open: boolean
@@ -12,26 +14,19 @@ type DealSlideOverProps = {
 }
 
 export default function CustomerSlideOver({ open, onClose }: DealSlideOverProps) {
+  const { addCustomer } = useCustomersStore();
+
   const handleSubmit = async (values: any) => {
     try {
-      // Call your API to create a new customers
-      const response = await fetch("/api/admin/customers", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(values),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to create customers");
-      }
-
-      const data = await response.json();
-      console.log("Customers created successfully:", data);
+      toast.loading("Creating customer...", { id: "create-customer" });
+      // Use the store's addCustomer method instead of direct API call
+      await addCustomer(values);
+      toast.success("Customer created successfully!", { id: "create-customer" });
       onClose();
     } catch (error) {
-      console.error("Error creating customers:", error);
+      toast.error("Failed to create customer. Please try again.", { id: "create-customer" });
+      console.error("Error creating customer:", error);
+      // Error handling is already done in the store with toast notifications
     }
   }
   return (

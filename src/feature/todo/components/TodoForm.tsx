@@ -2,11 +2,14 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Formik, Form, Field, ErrorMessage } from "formik"
 import * as Yup from "yup"
 import { Button } from "@/components/ui/Button"
 import UploadButton from "@/components/ui/UploadButton"
+import { useUserStore } from "@/feature/user/store/userStore"
+import SearchableDropdown from "@/components/ui/SearchableDropdown"
+import toast from "react-hot-toast"
 
 type TodoFormValues = {
     taskName: string
@@ -19,23 +22,25 @@ type TodoFormValues = {
     files: File[]
 }
 
+
 const schema = Yup.object({
-    taskName: Yup.string().trim().required(""),
-    linkedTo: Yup.string().trim().required("Company is required"),
+    taskName: Yup.string().trim().required("Task name is required"),
+    linkedTo: Yup.string().trim().required("Company/Contact is required"),
     assignedTo: Yup.string().trim(),
-    status: Yup.string().oneOf(["todo", "inprogress", "onhold", "done"]).required("status is required"),
-    priority: Yup.string().oneOf(["high", "urgent", "medium", "low"]).required("status is required"),
+    status: Yup.string().required("Status is required"),
+    priority: Yup.string().required("Priority is required"),
     dueDate: Yup.string().nullable(),
     notes: Yup.string(),
     files: Yup.array().of(Yup.mixed<File>()),
 })
 
+
 const initialValues: TodoFormValues = {
     taskName: "",
     linkedTo: "",
     assignedTo: "",
-    status: "todo",
-    priority: "high",
+    status: "",
+    priority: "",
     dueDate: "",
     notes: "",
     files: [],
@@ -57,28 +62,54 @@ export default function TodoForm({
         for (let i = 0; i < files.length; i++) form.append("file", files[i]);
 
         setUploading(true);
-        const res = await fetch("/api/uploadFile", { method: "POST", body: form });
-        setUploading(false);
-        if (res.ok) {
-            const json = await res.json();
-            setUploadedFiles(prev => [...prev, ...json.files]);
-        } else {
-            alert("Upload failed");
+        try {
+            const res = await fetch("/api/uploadFile", { method: "POST", body: form });
+            if (res.ok) {
+                const json = await res.json();
+                setUploadedFiles(prev => [...prev, ...json.files]);
+                toast.success("Files uploaded successfully!");
+            } else {
+                toast.error("Upload failed. Please try again.");
+            }
+        } catch (error) {
+            toast.error("Upload failed. Please check your connection and try again.");
+        } finally {
+            setUploading(false);
         }
     };
+    const { users, loading: usersLoading, fetchUsers } = useUserStore();
+
+useEffect(() => {
+    if (users.length === 0) {
+        fetchUsers();
+    }
+}, [users]);
+
+const userOptions = users.map((user: any) => ({
+    id: user.id,
+    value: user.id,
+    label: user.name || user.email
+}));
 
     return (
         <Formik<TodoFormValues>
             initialValues={initialValues}
             validationSchema={schema}
-            onSubmit={(vals, { setSubmitting, resetForm }) => {
-                const payload = {
-                    ...vals,
-                    files: uploadedFiles
-                };
-                onSubmit(payload)
-                setSubmitting(false)
-                resetForm()
+            onSubmit={async (vals, { setSubmitting, resetForm }) => {
+                try {
+                    const payload = {
+                        ...vals,
+                        files: uploadedFiles
+                    };
+
+                    onSubmit(payload);
+                    toast.success("Task saved successfully!");
+                    resetForm();
+                } catch (error: any) {
+                    toast.error("Failed to save task. Please try again.");
+                } finally {
+                    setSubmitting(false);
+                }
             }}
         >
             {({ isSubmitting, isValid, dirty, values, setFieldValue, resetForm }) => (
@@ -95,28 +126,40 @@ export default function TodoForm({
                         </FieldBlock>
 
                         <FieldBlock name="linkedTo" label="Linked To">
-                            <Field
-                                as="select"
-                                id="linkedTo"
-                                name="linkedTo"
-                                className="w-full text-sm rounded-md shadow-sm border  border-[var(--border-gray)] bg-background px-3 py-2 outline-none focus:ring-1 focus:ring-gray-400 focus:outline-none"
-                            >
-                                <option>Claire Brunet</option>
-                                <option>Alex Kim</option>
-                                <option>Jordan Lee</option>
+                            <Field name="linkedTo">
+                                {({ field, form }: any) => (
+                                    <SearchableDropdown
+                                        name="linkedTo"
+                                        value={field.value || ""}
+                                        options={userOptions}
+                                        onChange={(val) => {
+                                            form.setFieldValue("linkedTo", val);
+                                            form.setFieldTouched("linkedTo", true);
+                                        }}
+                                        placeholder="Select User"
+                                        showIcon={false}
+                                        maxOptions={20}
+                                    />
+                                )}
                             </Field>
                         </FieldBlock>
 
                         <FieldBlock name="assignedTo" label="Assigned To">
-                            <Field
-                                as="select"
-                                id="assignedTo"
-                                name="assignedTo"
-                                className="w-full text-sm rounded-md shadow-sm border  border-[var(--border-gray)] bg-background px-3 py-2 outline-none focus:ring-1 focus:ring-gray-400 focus:outline-none"
-                            >
-                                <option>Claire Brunet</option>
-                                <option>Alex Kim</option>
-                                <option>Jordan Lee</option>
+                            <Field name="assignedTo">
+                                {({ field, form }: any) => (
+                                    <SearchableDropdown
+                                        name="assignedTo"
+                                        value={field.value || ""}
+                                        options={userOptions}
+                                        onChange={(val) => {
+                                            form.setFieldValue("assignedTo", val);
+                                            form.setFieldTouched("assignedTo", true);
+                                        }}
+                                        placeholder="Select User"
+                                        showIcon={false}
+                                        maxOptions={20}
+                                    />
+                                )}
                             </Field>
                         </FieldBlock>
 
@@ -128,9 +171,10 @@ export default function TodoForm({
                                     name="status"
                                     className="w-full text-sm rounded-md shadow-sm border  border-[var(--border-gray)] bg-background px-3 py-2 outline-none focus:ring-1 focus:ring-gray-400 focus:outline-none"
                                 >
-                                    <option value="todo">Todo</option>
-                                    <option value="inprogress">In Progress</option>
-                                    <option value="onhold">On Hold</option>
+                                    <option value="" disabled>Select Status</option>
+                                    <option value="to-do">Todo</option>
+                                    <option value="in-progress">In Progress</option>
+                                    <option value="on-hold">On Hold</option>
                                     <option value="done">Done</option>
                                 </Field>
                             </FieldBlock>
@@ -142,6 +186,7 @@ export default function TodoForm({
                                     name="priority"
                                     className="w-full text-sm rounded-md shadow-sm border  border-[var(--border-gray)] bg-background px-3 py-2 outline-none focus:ring-1 focus:ring-gray-400 focus:outline-none"
                                 >
+                                    <option value="" disabled>Select Priority</option>
                                     <option value="high">High</option>
                                     <option value="urgent">Urgent</option>
                                     <option value="medium">Medium</option>
@@ -183,7 +228,7 @@ export default function TodoForm({
                         >
                             Cancel
                         </Button>
-                        <Button type="submit" className="flex-1 bg-black text-white" disabled={isSubmitting || !isValid || !dirty}>
+                        <Button type="submit" className="flex-1 bg-black text-white" >
                             Save Task
                         </Button>
                     </div>
@@ -208,20 +253,8 @@ function FieldBlock({
                 {label}
             </label>
             {children}
-            <Error name={name} />
+            <ErrorMessage name={name} component="div" className="text-sm text-red-600" />
         </div>
     )
 }
 
-function Error({ name }: { name: string }) {
-    return (
-        <ErrorMessage
-            name={name}
-            render={(msg) => (
-                <p role="alert" className="text-sm text-destructive">
-                    {msg}
-                </p>
-            )}
-        />
-    )
-}

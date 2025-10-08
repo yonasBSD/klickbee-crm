@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, type KeyboardEvent } from "react"
+import { useEffect, useState, type KeyboardEvent } from "react"
 import { Formik, Form, Field, ErrorMessage } from "formik"
 import * as Yup from "yup"
 import { Button } from "@/components/ui/Button"
@@ -12,6 +12,7 @@ import TagInput from "@/components/ui/TagInput"
 import UploadButton from "@/components/ui/UploadButton"
 import InputWithDropDown from "@/components/ui/InputWithDropDown"
 import { companyOptions } from "@/feature/deals/libs/companyData"
+import { useUserStore } from "@/feature/user/store/userStore"
 
 type CustomerFormValues = {
     fullName: string
@@ -26,29 +27,17 @@ type CustomerFormValues = {
 }
 
 const schema = Yup.object({
-    fullName: Yup.string().trim().required(""),
+    fullName: Yup.string().trim().required("Full name is required"),
     company: Yup.string().trim().required("Company is required"),
-    email: Yup.string().trim(),
-    status: Yup.string().oneOf(["Active", "FollowUp", "inactive"]).required("Stage is required"),
+    email: Yup.string().trim().email("Please enter a valid email address"),
+    phone: Yup.string().trim().matches(/^[\+]?[0-9\-\(\)\s]+$/, "Please enter a valid phone number"),
+    status: Yup.string().oneOf(["Active", "FollowUp", "inactive"]).required("Status is required"),
     owner: Yup.string().trim().required("Owner is required"),
     tags: Yup.array().of(Yup.string().trim().min(1)).max(10, "Up to 10 tags"),
     notes: Yup.string(),
     files: Yup.array().of(Yup.mixed<File>()),
 
 })
-
-const initialValues: CustomerFormValues = {
-    fullName: "",
-    company: "",
-    email: "",
-    status: "Active",
-    phone: "",
-    owner: "Claire Brunet",
-    tags: [],
-    notes: "",
-    files: [],
-}
-
 export default function CustomerForm({
     onSubmit,
     onCancel,
@@ -59,6 +48,34 @@ export default function CustomerForm({
     const [tagInput, setTagInput] = useState("")
     const [uploading, setUploading] = useState(false);
     const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
+
+    const { users, loading: usersLoading, fetchUsers } = useUserStore();
+
+    useEffect(() => {
+        if (users.length === 0) {
+            fetchUsers();
+        }
+    }, [users]);
+
+    // Create dynamic initial values based on users state
+    const getInitialValues = (): CustomerFormValues => ({
+        fullName: "",
+        company: "",
+        email: "",
+        status: "",
+        phone: "",
+        owner: users.length > 0 ? users[0].id : "",
+        tags: [],
+        notes: "",
+        files: [],
+    });
+
+    // Create user options for the dropdown
+    const userOptions = users.map((user: any) => ({
+        id: user.id,
+        value: user.id,
+        label: user.name || user.email
+    }));
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
@@ -79,7 +96,7 @@ export default function CustomerForm({
 
     return (
         <Formik<CustomerFormValues>
-            initialValues={initialValues}
+            initialValues={getInitialValues()}
             validationSchema={schema}
             onSubmit={(vals, { setSubmitting, resetForm }) => {
                 const cleaned = {
@@ -141,16 +158,15 @@ export default function CustomerForm({
 
 
                         <FieldBlock name="owner" label="Owner">
-                            <Field
-                                as="select"
-                                id="owner"
+                            <SearchableDropdown
                                 name="owner"
-                                className="w-full text-sm rounded-md shadow-sm border  border-[var(--border-gray)] bg-background px-3 py-2 outline-none focus:ring-1 focus:ring-gray-400 focus:outline-none"
-                            >
-                                <option>Claire Brunet</option>
-                                <option>Alex Kim</option>
-                                <option>Jordan Lee</option>
-                            </Field>
+                                value={values.owner}
+                                options={userOptions}
+                                onChange={(val) => setFieldValue("owner", val)}
+                                placeholder="Select Owner"
+                                showIcon={false}
+                                maxOptions={20}
+                            />
                         </FieldBlock>
 
                         <FieldBlock name="status" label="Status">
@@ -160,10 +176,12 @@ export default function CustomerForm({
                                 name="status"
                                 className="w-full text-sm rounded-md shadow-sm border  border-[var(--border-gray)] bg-background px-3 py-2 outline-none focus:ring-1 focus:ring-gray-400 focus:outline-none"
                             >
+                                                                <option value="" disabled>Select Status</option>
+
                                 <option value="Active">Active</option>
                                 <option value="FollowUp">Follow Up</option>
                                 <option value="inactive">inactive</option>
-                              
+
 
                             </Field>
                         </FieldBlock>
@@ -197,7 +215,7 @@ export default function CustomerForm({
                         >
                             Cancel
                         </Button>
-                        <Button type="submit" className="flex-1 bg-black text-white" disabled={isSubmitting || !isValid || !dirty}>
+                        <Button type="submit" className="flex-1 bg-black text-white" >
                             Save Customer
                         </Button>
                     </div>
@@ -232,7 +250,7 @@ function Error({ name }: { name: string }) {
         <ErrorMessage
             name={name}
             render={(msg) => (
-                <p role="alert" className="text-sm text-destructive">
+                <p role="alert" className="text-sm text-red-600">
                     {msg}
                 </p>
             )}

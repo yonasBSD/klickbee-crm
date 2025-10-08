@@ -13,10 +13,17 @@ type TodoCardProps = {
 }
 
 const statusBadgeClass: Record<string, string> = {
-  "To-Do": "bg-[#E4E4E7] text-[#3F3F46]",
-  "In-Progress": "bg-[#DBEAFE] text-[#1D4ED8]",
+  "Todo": "bg-[#E4E4E7] text-[#3F3F46]",
+  "InProgress": "bg-[#DBEAFE] text-[#1D4ED8]",
   "Done": "bg-[#DCFCE7] text-[#166534]",
-  "On-Hold": "bg-[#FFEAD5] text-[#9A3412]",
+  "OnHold": "bg-[#FFEAD5] text-[#9A3412]",
+}
+
+const statusDisplayMap: Record<string, string> = {
+  "Todo": "To-Do",
+  "InProgress": "In-Progress",
+  "OnHold": "On-Hold",
+  "Done": "Done",
 }
 
 function PriorityPill({ priority }: { priority?: TaskData["priority"] }) {
@@ -40,51 +47,63 @@ function PriorityPill({ priority }: { priority?: TaskData["priority"] }) {
   )
 }
 
+const formatDate = (dateString?: string) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+};
+
 export function TodoCard({ task, className }: TodoCardProps) {
   const badgeClass = statusBadgeClass[String(task.status)] ?? "bg-[#E4E4E7] text-[#3F3F46]"
+  const displayStatus = statusDisplayMap[String(task.status)] || String(task.status)
+
+  // Check if due date is overdue
+  const isOverdue = task.dueDate ? new Date(task.dueDate) < new Date() : false;
 
   return (
     <Card className={cn("border", className)} role="article" aria-label={task.taskName}>
       <CardContent className="p-4 gap-3">
-        <div className="mb-2 flex items-center gap-2">
+        <div className="mb-2 flex items-center gap-2 flex-wrap">
           <span className={cn("inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium", badgeClass)}>
-            {task.status}
+            {displayStatus}
           </span>
           {task.priority ? (
             <div className="flex gap-2">
-              <PriorityPill priority={task.priority} />
             </div>
           ) : null}
         </div>
 
-        <h4 className="text-sm font-semibold text-pretty">{task.taskName}</h4>
-        <p className="mt-1 text-xs text-[var(--brand-gray)] ">{task.linkedTo}</p>
+        <h4 className="text-sm font-semibold text-pretty leading-tight">{task.taskName}</h4>
+        <p className="mt-1 text-xs text-[var(--brand-gray)] ">{typeof task.linkedTo === 'object' ? task.linkedTo?.name : task.linkedTo ?? ""}</p>
+        {task.dueDate && (
+          <div className="text-xs mt-2 text-[var(--brand-gray)] flex items-center gap-2">
+            <Calendar className="h-3.5 w-3.5" />
+            <span className={cn(isOverdue && "text-red-600 font-medium")}>
+              {formatDate(task.dueDate,)}
+            </span>
+          </div>
+        )}
 
-        <div className="text-xs mt-2 text-[var(--brand-gray)] ">
-          {task.dueDate ? (
-            <div className="flex items-center gap-2">
-              <Calendar className="h-3.5 w-3.5 " />
-              <span>{task.dueDate}</span>
-            </div>
-          ) : null}
-         
-        </div>
-
-        <div className="mt-4 flex items-center gap-2">
+         <div className="mt-4 flex items-center gap-2">
           <Avatar className="h-6 w-6">
-            <AvatarImage src={task.assignedImage || "/placeholder.svg"} alt={task.assignedTo} />
+            <AvatarImage src={task.assignedImage || "/placeholder.svg"} alt={typeof task.assignedTo === 'object' ? task.assignedTo?.name ?? "Assignee" : task.assignedTo ?? "Assignee"} />
             <AvatarFallback>{initials(task.assignedTo)}</AvatarFallback>
           </Avatar>
-          <span className="text-xs text-foreground/80">{task.assignedTo}</span>
+          <span className="text-xs text-foreground/80">{typeof task.assignedTo === 'object' ? task.assignedTo?.name : task.assignedTo ?? ""}</span>
         </div>
       </CardContent>
     </Card>
   )
 }
 
-function initials(name?: string) {
+function initials(name?: string | { name: string; assignedImage?: string }) {
   if (!name) return "?"
-  const parts = String(name).trim().split(/\s+/)
+  const nameStr = typeof name === 'object' ? name?.name : name
+  const parts = String(nameStr).trim().split(/\s+/)
   const [a, b] = [parts[0]?.[0], parts[1]?.[0]]
   return (a || "") + (b || "")
 }

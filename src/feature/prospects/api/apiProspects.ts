@@ -28,6 +28,7 @@ export async function POST(req: Request) {
     }
 
     const data = parsed.data as any;
+    console.log({data})
 
     const created = await prisma.prospect.create({
       data: {
@@ -59,6 +60,9 @@ export async function GET(req: Request) {
     const where = ownerId ? { ownerId } : undefined;
     const prospects = await prisma.prospect.findMany({
       where,
+      include: {
+        owner: true, // Include owner information
+      },
       orderBy: { createdAt: "desc" },
       take: Math.min(limit, 200),
     });

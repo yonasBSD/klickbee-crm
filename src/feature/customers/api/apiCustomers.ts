@@ -60,6 +60,9 @@ export async function GET(req: Request) {
     const where = ownerId ? { ownerId } : undefined;
     const customers = await prisma.customer.findMany({
       where,
+      include: {
+        owner: true,
+      },
       orderBy: { createdAt: "desc" },
       take: Math.min(limit, 200),
     });
