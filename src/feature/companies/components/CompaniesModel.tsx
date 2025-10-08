@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/Button"
 import { cn } from "@/libs/utils"
 import Modal from "@/components/ui/Modal"
 import CompaniesrForm from "./CompaniesForm"
+import toast from "react-hot-toast"
+import { useCompaniesStore } from "../stores/useCompaniesStore"
 
 type DealSlideOverProps = {
   open: boolean
@@ -12,19 +14,18 @@ type DealSlideOverProps = {
 }
 
 export default function CompanySlideOver({ open, onClose }: DealSlideOverProps) {
+  const { addCompany } = useCompaniesStore();
   const handleSubmit = async (values: any) => {
     try {
-      const response = await fetch("/api/admin/companies", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
-      if (!response.ok) throw new Error("Failed to create company");
-      const data = await response.json();
-      console.log("Company created successfully:", data);
+      toast.loading("Creating customer...", { id: "create-customer" });
+      // Use the store's addCustomer method instead of direct API call
+      await addCompany(values);
+      toast.success("Customer created successfully!", { id: "create-customer" });
       onClose();
-    } catch (err) {
-      console.error("Error creating company:", err);
+    } catch (error) {
+      toast.error("Failed to create customer. Please try again.", { id: "create-customer" });
+      console.error("Error creating customer:", error);
+      // Error handling is already done in the store with toast notifications
     }
   }
   return (

@@ -62,6 +62,9 @@ export async function GET(req: Request) {
     const where = ownerId ? { ownerId } : undefined;
     const companies = await prisma.company.findMany({
       where,
+      include: {
+        owner: true,  // Include owner information
+      },
       orderBy: { createdAt: "desc" },
       take: Math.min(limit, 200),
     });
