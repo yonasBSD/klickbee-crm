@@ -1,13 +1,13 @@
 import { z } from "zod";
 
 // Client form uses lowercase values; map them to Prisma enums (PascalCase)
-const statusValues = ["todo", "inprogress", "onhold", "done"] as const;
+const statusValues = [ "Todo", "InProgress", "OnHold", "Done"] as const;
 const priorityValues = ["high", "urgent", "medium", "low"] as const;
 
 export const createTodoSchema = z
   .object({
     taskName: z.string().trim().min(1, "Task name is required"),
-    status: z.enum(statusValues).default("todo"),
+    status: z.enum(statusValues).default("Todo"),
     priority: z.enum(priorityValues).default("high"),
     linkedId: z.string().trim().min(1),
     assignedId: z.string().trim().optional().or(z.literal("")),
@@ -17,15 +17,17 @@ export const createTodoSchema = z
   })
   .transform((data) => ({
     ...data,
-    // Map to Prisma enum casing
+    // Map to Prisma enum casing - handle both camelCase and lowercase inputs
     status:
-      data.status === "inprogress"
+       data.status === "InProgress"
         ? "InProgress"
-        : data.status === "onhold"
+        :  data.status === "OnHold"
         ? "OnHold"
-        : data.status === "done"
+        : data.status === "Done"
         ? "Done"
-        : "Todo",
+        : data.status === "Todo"
+        ? "Todo"
+        : "Todo", // default fallback
     priority:
       data.priority === "urgent"
         ? "Urgent"
@@ -33,12 +35,14 @@ export const createTodoSchema = z
         ? "Medium"
         : data.priority === "low"
         ? "Low"
-        : "High",
+        : data.priority === "high"
+        ? "High"
+        : "High", // default fallback
   }));
 
 export const updateTodoSchema = z
   .object({
-    id: z.string().trim().min(1),
+    id: z.string().trim().min(1).optional(), // Made optional since id comes from URL
     taskName: z.string().trim().optional(),
     status: z.enum(statusValues).optional(),
     priority: z.enum(priorityValues).optional(),
@@ -50,16 +54,19 @@ export const updateTodoSchema = z
   })
   .transform((data) => ({
     ...data,
+    // Map to Prisma enum casing - handle both camelCase and lowercase inputs
     status:
       data.status === undefined
         ? undefined
-        : data.status === "inprogress"
+        : data.status === "InProgress"
         ? "InProgress"
-        : data.status === "onhold"
+        :  data.status === "OnHold"
         ? "OnHold"
-        : data.status === "done"
+        :  data.status === "Done"
         ? "Done"
-        : "Todo",
+        : data.status === "Todo"
+        ? "Todo"
+        : "Todo", // default fallback
     priority:
       data.priority === undefined
         ? undefined
@@ -69,7 +76,9 @@ export const updateTodoSchema = z
         ? "Medium"
         : data.priority === "low"
         ? "Low"
-        : "High",
+        : data.priority === "high"
+        ? "High"
+        : "High", // default fallback
   }));
 
 export type CreateTodoInput = z.infer<typeof createTodoSchema>;

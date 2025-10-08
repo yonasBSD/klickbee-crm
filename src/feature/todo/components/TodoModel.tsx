@@ -1,10 +1,10 @@
 "use client"
 
 import { X } from "lucide-react"
-import { Button } from "@/components/ui/Button"
 import { cn } from "@/libs/utils"
 import Modal from "@/components/ui/Modal"
 import TodoForm from "./TodoForm"
+import { useTodoStore } from "../stores/useTodoStore"
 
 type TodoSlideOverProps = {
   open: boolean
@@ -12,23 +12,11 @@ type TodoSlideOverProps = {
 }
 
 export default function TodoSlideOver({ open, onClose }: TodoSlideOverProps) {
+  const { addTodo } = useTodoStore()
   const handleSubmit = async (values: any) => {
     try {
-      // Call your API to create a new deal
-      const response = await fetch("/api/admin/todos", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(values),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to create todo");
-      }
-
-      const data = await response.json();
-      console.log("Todo created successfully:", data);
+      await addTodo(values); 
+      onClose();
     } catch (error) {
       console.error("Error creating todo:", error);
     }
