@@ -1,18 +1,18 @@
 "use client"
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Table } from '@/components/ui/Table';
 
 import { ProspectHeader } from './ProspectHeader'
-import { prospectsData } from '../libs/prospectsdata'
 import { TableColumn } from '@/components/ui/Table'
-import { Contact } from '../types/types'
+import { Prospect } from '../types/types'
 import ProspectDetail from './ProspectDetail'
+import { useProspectsStore } from '../stores/useProspectsStore'
 
-export const prospectsColumns: TableColumn<Contact>[] = [
+export const prospectsColumns: TableColumn<Prospect>[] = [
   {
-    key: 'name',
-    title: 'Name',
-    dataIndex: 'name',
+    key: 'fullName',
+    title: 'Full Name',
+    dataIndex: 'fullName',
     sortable: true,
   },
   {
@@ -43,45 +43,61 @@ export const prospectsColumns: TableColumn<Contact>[] = [
     key: 'status',
     title: 'Status',
     dataIndex: 'status',
-  render: (status?: Contact['status']) => {
-  const cls: Record<NonNullable<Contact['status']>, string> = {
-    New: 'bg-[#E4E4E7] text-[#3F3F46]',
-    Cold: 'bg-[#DBEAFE] text-[#1D4ED8]',
-    'Warm Lead': 'bg-[#FEF3C7] text-[#92400E]',
-    Qualified: 'bg-green-100 text-green-700',
-    Converted: 'bg-teal-100 text-teal-700',
-    'Not Interested': 'bg-[#FEE2E2] text-[#B91C1C]',
-  };
+    render: (status?: Prospect['status']) => {
+      const cls: Record<NonNullable<Prospect['status']>, string> = {
+        New: 'bg-[#E4E4E7] text-[#3F3F46]',
+        Cold: 'bg-[#DBEAFE] text-[#1D4ED8]',
+        Qualified: 'bg-green-100 text-green-700',
+        Warmlead: 'bg-[#FEF3C7] text-[#92400E]',
+        Converted: 'bg-teal-100 text-teal-700',
+        Notintrested: 'bg-[#FEE2E2] text-[#B91C1C]',
+      };
 
-  const classes = status ? cls[status] : 'bg-gray-100 text-gray-500'; 
+      const classes = status ? cls[status] : 'bg-gray-100 text-gray-500';
 
-  return (
-    <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${classes}`}>
-      {status ?? 'Unknown'}
-    </span>
-  );
-},
-
-  },
-  {
-    key: 'lastContact',
-    title: 'Last Contact',
-    dataIndex: 'lastContact',
-    sortable: true,
+      return (
+        <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${classes}`}>
+          {status ?? 'Unknown'}
+        </span>
+      );
+    },
   },
   {
     key: 'tags',
     title: 'Tags',
     dataIndex: 'tags',
     sortable: false,
+    render: (tags?: string[]) => {
+      if (!tags || tags.length === 0) return '-';
+      return (
+        <div className="flex flex-wrap gap-1">
+          {tags.slice(0, 2).map((tag, index) => (
+            <span key={index} className="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-800">
+              {tag}
+            </span>
+          ))}
+          {tags.length > 2 && (
+            <span className="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-800">
+              +{tags.length - 2}
+            </span>
+          )}
+        </div>
+      );
+    },
   },
 ]
 
 export default function Prospects () {
-  const [selected, setSelected] = React.useState<Contact | null>(null)
+  const [selected, setSelected] = React.useState<Prospect | null>(null)
   const [open, setOpen] = React.useState(false)
 
-  const openDetail = (c: Contact) => { setSelected(c); setOpen(true) }
+  const { prospects, fetchProspects, loading, deleteProspect } = useProspectsStore();
+
+  useEffect(() => {
+    fetchProspects();
+  }, [fetchProspects]);
+
+  const openDetail = (prospect: Prospect) => { setSelected(prospect); setOpen(true) }
   const closeDetail = () => { setOpen(false); setSelected(null) }
 
   return (
@@ -90,17 +106,17 @@ export default function Prospects () {
        <div className='py-8 px-6 overflow-x-hidden'>
           <Table 
             columns={prospectsColumns} 
-            data={prospectsData} 
+            data={prospects} 
             selectable={true}
-            onRowClick={(record) => openDetail(record as Contact)}
+            loading={loading}
+            onRowClick={(record) => openDetail(record as Prospect)}
           />
           <ProspectDetail 
             isOpen={open}
-            contact={selected}
+            prospect={selected}
             onClose={closeDetail}
-            onDelete={(id: string) => {
-              // Handle delete logic here
-              console.log('Delete prospect:', id);
+            onDelete={async (id: string) => {
+              await deleteProspect(id);
               closeDetail();
             }}
             onEdit={(id: string) => {

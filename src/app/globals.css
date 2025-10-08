@@ -5,6 +5,8 @@
   --foreground: #09090B;
    --brand-gray: #71717A;
    --border-gray: #E4E4E7;
+   --color-destructive: #ef4444;
+   --color-destructive-foreground: #ffffff;
 
 }
 /* Hide scrollbar for Chrome, Safari and Opera */
