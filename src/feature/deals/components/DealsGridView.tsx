@@ -19,42 +19,6 @@ useEffect(() => {
     fetchDeals();
   }, [fetchDeals])
   
-// const handleMove = React.useCallback(
-//   async ({ itemId, fromKey, toKey }: { itemId: string | number; fromKey: string; toKey: string }) => {
-//     const dealToUpdate = deals.find((d) => String(d.id) === String(itemId));
-//     if (!dealToUpdate) return;
-
-//     const newStage = toStageFromColumn(toKey, dealToUpdate.stage);
-//     if (!newStage || newStage === dealToUpdate.stage) return;
-//    const stageLabelMap: Record<string, string> = {
-//       New: "Early Stage",
-//       Proposal: "In Progress",
-//       Contacted: "In Progress",
-//       Won: "Won",
-//       Lost: "Lost",
-//     };
-
-//     const readableStage = stageLabelMap[newStage] || newStage;
-//     try {
-//       // Optimistically update the deal’s stage in Zustand
-//       useDealStore.setState((state) => ({
-//         deals: state.deals.map((d) =>
-//           d.id === dealToUpdate.id ? { ...d, stage: newStage } : d
-//         ),
-//       }));
-
-//       // Persist change via API
-//       await updateDeal(dealToUpdate.id, { ...dealToUpdate, stage: newStage });
-
-//       toast.success(`Deal moved to ${readableStage}`);
-//     } catch (err: any) {
-//       toast.error(`Failed to move deal: ${err.message}`);
-//       console.error("handleMove error:", err);
-//     }
-//   },
-//   [deals, updateDeal]
-// );
-
 let moveInProgress = false;
 
 const handleMove = React.useCallback(async  ({ itemId, fromKey, toKey }: { itemId: string | number; fromKey: string; toKey: string }) => {

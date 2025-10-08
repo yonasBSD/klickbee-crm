@@ -1,10 +1,10 @@
 "use client"
 
 import { X } from "lucide-react"
-import { Button } from "@/components/ui/Button"
 import { cn } from "@/libs/utils"
 import Modal from "@/components/ui/Modal"
 import TodoForm from "./TodoForm"
+import { useTodoStore } from "../stores/useTodoStore"
 
 type TodoSlideOverProps = {
   open: boolean
@@ -12,6 +12,15 @@ type TodoSlideOverProps = {
 }
 
 export default function TodoSlideOver({ open, onClose }: TodoSlideOverProps) {
+  const { addTodo } = useTodoStore()
+  const handleSubmit = async (values: any) => {
+    try {
+      await addTodo(values); 
+      onClose();
+    } catch (error) {
+      console.error("Error creating todo:", error);
+    }
+  }
   return (
     <Modal open={open} onClose={onClose}>
       <aside
@@ -40,7 +49,7 @@ export default function TodoSlideOver({ open, onClose }: TodoSlideOverProps) {
           <TodoForm
             onCancel={onClose}
             onSubmit={(values) => {
-              console.log("[v0] Deal submitted:", values)
+              handleSubmit(values)
               onClose()
             }}
           />

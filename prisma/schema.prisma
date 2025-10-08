@@ -10,12 +10,14 @@ datasource db {
 model User {
   id        String   @id @default(cuid())
   name      String?
-  email     String  @unique
+  email     String   @unique
   password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
 
-  deals Deal[]
+  deals         Deal[]
+  linkedTodos   Todo[] @relation("linkedUser")
+  assignedTodos Todo[] @relation("assignedUser")
 }
 
 enum DealStage {
@@ -45,9 +47,42 @@ model Deal {
   closeDate DateTime?
   tags      String[]  @default([])
   notes     String?
-  files     Json?     // array of file metadata objects (name, url, size, etc.)
+  files     Json? // array of file metadata objects (name, url, size, etc.)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
   @@index([ownerId])
+}
+
+enum TodoStatus {
+  Todo
+  InProgress
+  OnHold
+  Done
+}
+
+enum TodoPriority {
+  Low
+  Medium
+  High
+  Urgent
+}
+
+model Todo {
+  id         String       @id @default(uuid())
+  taskName   String
+  linkedTo   User         @relation("linkedUser", fields: [linkedId], references: [id], onDelete: Cascade)
+  linkedId   String
+  assignedTo User?        @relation("assignedUser", fields: [assignedId], references: [id], onDelete: Cascade)
+  assignedId String?
+  status     TodoStatus
+  priority   TodoPriority
+  dueDate    DateTime?
+  notes      String?
+  files      Json?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  @@index([linkedId])
+  @@index([assignedId])
 }
