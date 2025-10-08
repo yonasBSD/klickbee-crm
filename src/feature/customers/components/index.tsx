@@ -1,22 +1,22 @@
 "use client"
-import React from 'react'
+import React, { useEffect } from 'react'
 import { CustomerHeader } from './CustomerHeader'
 import { Table, TableColumn } from '@/components/ui/Table';
 import { Customer } from '../types/types';
-import { customersData } from '../libs/customerData';
+import { useCustomersStore } from '../stores/useCustomersStore';
 import CustomerDetail from './CustomerDetail';
 
 export const customerColumns: TableColumn<Customer>[] = [
   {
-    key: 'customername',
+    key: 'fullName',
     title: ' Customer Name',
-    dataIndex: 'customername',
+    dataIndex: 'fullName',
     sortable: true,
   },
   {
-    key: 'companyname',
+    key: 'company',
     title: 'Company Name',
-    dataIndex: 'companyname',
+    dataIndex: 'company',
     sortable: false,
   },
   {
@@ -36,6 +36,7 @@ export const customerColumns: TableColumn<Customer>[] = [
     title: 'Owner',
     dataIndex: 'owner',
     avatar: { srcIndex: 'ownerAvatar', altIndex: 'owner', size: 32 },
+    render: (owner: Customer['owner']) => owner?.name || owner?.email || 'Unknown',
   },
   {
     key: 'status',
@@ -44,9 +45,8 @@ export const customerColumns: TableColumn<Customer>[] = [
   render: (status?: Customer['status']) => {
   const cls: Record<NonNullable<Customer['status']>, string> = {
     Active: 'bg-green-100 text-green-700',
-    'Follow Up': 'bg-[#FEF3C7] text-[#92400E]',
-    'inactive': 'bg-[#FEE2E2] text-[#B91C1C]',
- 
+    FollowUp: 'bg-[#FEF3C7] text-[#92400E]',
+    inactive: 'bg-[#FEE2E2] text-[#B91C1C]',
   };
 
   const classes = status ? cls[status] : 'bg-gray-100 text-gray-500'; 
@@ -60,16 +60,26 @@ export const customerColumns: TableColumn<Customer>[] = [
 
   },
   {
-    key: 'lastContact',
+    key: 'createdAt',
     title: 'Last Contact',
-    dataIndex: 'lastContact',
+    dataIndex: 'createdAt',
     sortable: true,
+    render: (dateString: string) => {
+      if (!dateString) return '-';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      });
+    },
   },
   {
     key: 'tags',
     title: 'Tags',
     dataIndex: 'tags',
     sortable: false,
+    render: (tags: string[]) => tags?.join(', ') || '-',
   },
 ]
 
@@ -77,6 +87,12 @@ export const customerColumns: TableColumn<Customer>[] = [
 export default function Customers () {
   const [selected, setSelected] = React.useState<Customer | null>(null)
   const [open, setOpen] = React.useState(false)
+
+  const { customers, fetchCustomers, loading, deleteCustomer } = useCustomersStore();
+
+  useEffect(() => {
+    fetchCustomers();
+  }, [fetchCustomers]);
 
   const openDetail = (c: Customer) => { setSelected(c); setOpen(true) }
   const closeDetail = () => { setOpen(false); setSelected(null) }
@@ -88,7 +104,7 @@ export default function Customers () {
              
                 <Table 
                   columns={customerColumns} 
-                  data={customersData} 
+                  data={customers} 
                   selectable={true}
                   onRowClick={(record) => openDetail(record as Customer)}
                 />
@@ -96,9 +112,8 @@ export default function Customers () {
                   isOpen={open}
                   customer={selected}
                   onClose={closeDetail}
-                  onDelete={(id: string) => {
-                    // Handle delete logic here
-                    console.log('Delete customer:', id);
+                  onDelete={async (id: string) => {
+                    await deleteCustomer(id);
                     closeDetail();
                   }}
                   onEdit={(id: string) => {

@@ -7,8 +7,8 @@ import type { Customer } from "../types/types";
 const renderStatusBadge = (status?: Customer['status']) => {
   const cls: Record<NonNullable<Customer['status']>, string> = {
     Active: 'bg-green-100 text-green-700',
-    'Follow Up': 'bg-[#FEF3C7] text-[#92400E]',
-    'inactive': 'bg-[#FEE2E2] text-[#B91C1C]',
+    FollowUp: 'bg-[#FEF3C7] text-[#92400E]',
+    inactive: 'bg-[#FEE2E2] text-[#B91C1C]',
   };
 
   const classes = status ? cls[status] : 'bg-gray-100 text-gray-500';
@@ -48,28 +48,23 @@ export default function CustomerDetail({
       label: "Owner",
       value: (
         <span className="flex items-center gap-2">
-          {customer.ownerAvatar && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={customer.ownerAvatar}
-              alt={customer.owner ?? "Owner"}
-              className="w-6 h-6 rounded-full"
-            />
-          )}
-          {customer.owner ?? "-"}
+          <span className="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-xs">
+            {customer.owner?.name?.charAt(0)?.toUpperCase() || customer.owner?.email?.charAt(0)?.toUpperCase() || 'U'}
+          </span>
+          {customer.owner?.name || customer.owner?.email || '-'}
         </span>
       ),
     },
-    { label: "Company Name", value: customer.companyname ?? "-" },
+    { label: "Company Name", value: customer.company ?? "-" },
     { label: "Email", value: customer.email ?? "-" },
     { label: "Phone", value: customer.phone ?? "-" },
-    customer.tags && { label: "Tags", value: customer.tags },
+    customer.tags && customer.tags.length > 0 && { label: "Tags", value: customer.tags.join(', ') },
   ].filter(Boolean) as { label: string; value: React.ReactNode }[];
 
   return (
     <DetailModal
       isOpen={isOpen}
-      title={customer.customername ?? "Customer Details"}
+      title={customer.fullName ?? "Customer Details"}
       details={details}
       onClose={onClose}
       onDelete={onDelete ? () => onDelete(customer.id) : undefined}
