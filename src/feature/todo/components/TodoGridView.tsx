@@ -2,16 +2,22 @@
 
 import * as React from 'react'
 import GridView from '@/components/ui/GridView'
-import { tasksData as initialTasks } from '../libs/taskData'
-import type { TaskData } from '../types/types'
 import { TodoCard } from './TodoCard'
 import { Plus } from 'lucide-react'
 import TodoDetail from './TodoDetail'
+import { useTodoStore } from '../stores/useTodoStore'
+import type { TaskData } from '../types/types'
+
+import toast from 'react-hot-toast'
 
 export default function TodoGridView() {
-  const [tasks, setTasks] = React.useState<TaskData[]>(() => initialTasks)
+  const { todos, fetchTodos, loading, updateTodo ,deleteTodo } = useTodoStore()
   const [selectedTask, setSelectedTask] = React.useState<TaskData | null>(null)
   const [isDetailOpen, setIsDetailOpen] = React.useState(false)
+
+  React.useEffect(() => {
+    fetchTodos()
+  }, [fetchTodos])
 
   const openDetail = (task: TaskData) => {
     setSelectedTask(task)
@@ -23,15 +29,78 @@ export default function TodoGridView() {
     setSelectedTask(null)
   }
 
-  const handleMove = React.useCallback(({ itemId, fromKey, toKey }: { itemId: string | number; fromKey: string; toKey: string }) => {
-    setTasks((prev) => prev.map((t) => (String(t.id) === String(itemId) ? { ...t, status: toStatusFromColumn(toKey, t.status) } : t)))
+  let moveInProgress = false;
+
+  const groupBy = React.useCallback((t: TaskData) => {
+    const statusMap = {
+      'Todo': 'To-Do',
+      'InProgress': 'In-Progress',
+      'OnHold': 'On-Hold',
+      'Done': 'Done',
+    }
+    return statusMap[t.status as keyof typeof statusMap] || 'To-Do'
   }, [])
+
+  const handleMove = React.useCallback(async ({ itemId, fromKey, toKey }: { itemId: string | number; fromKey: string; toKey: string }) => {
+    if (moveInProgress) return; // prevent double fire in Strict Mode
+    moveInProgress = true;
+
+    const taskToUpdate = todos.find((t) => String(t.id) === String(itemId));
+    if (!taskToUpdate) {
+      moveInProgress = false;
+      return;
+    }
+
+    const newStatus = toStatusFromColumn(toKey, taskToUpdate.status);
+    if (!newStatus || newStatus === taskToUpdate.status) {
+      moveInProgress = false;
+      return;
+    }
+
+    const statusLabelMap: Record<string, string> = {
+      Todo: "To-Do",
+      InProgress: "In-Progress",
+      OnHold: "On-Hold",
+      Done: "Done",
+    };
+
+    const readableStatus = statusLabelMap[newStatus] || newStatus;
+
+    try {
+      // Optimistic update - immediately update UI
+      useTodoStore.setState((state) => ({
+        todos: state.todos.map((t) =>
+          t.id === taskToUpdate.id ? { ...t, status: newStatus } : t
+        ),
+      }));
+
+      await updateTodo(taskToUpdate.id, { status: newStatus });
+
+      toast.success(`Task moved to ${readableStatus}`);
+    } catch (err: any) {
+      // Revert optimistic update on error
+      useTodoStore.setState((state) => ({
+        todos: state.todos.map((t) =>
+          t.id === taskToUpdate.id ? taskToUpdate : t
+        ),
+      }));
+
+      toast.error(`Failed to move task: ${err.message}`);
+      console.error("handleMove error:", err);
+    } finally {
+      moveInProgress = false;
+    }
+  }, [todos, updateTodo])
+
+  if (loading) {
+    return <div className="p-4 text-center">Loading todos...</div>
+  }
 
   return (
     <main className="p-4 bg-[#F4F4F5] rounded-lg border border-[var(--border-gray)] shadow-sm">
       <GridView
-        items={tasks}
-        groupBy={(t: TaskData) => t.status ?? 'To-Do'}
+        items={todos}
+        groupBy={groupBy}
         order={["To-Do", "In-Progress", "On-Hold", "Done"]}
         labels={{
           "To-Do": "To-Do",
@@ -74,7 +143,10 @@ export default function TodoGridView() {
         isOpen={isDetailOpen}
         task={selectedTask}
         onClose={closeDetail}
-        onDelete={() => closeDetail()}
+        onDelete={async (id) => {
+                  await deleteTodo(id)
+                  closeDetail()
+                }}
         onEdit={() => {}}
         onAddNotes={() => {}}
         onExport={() => {}}
@@ -86,14 +158,14 @@ export default function TodoGridView() {
 function toStatusFromColumn(columnKey: string, currentStatus?: TaskData['status']): TaskData['status'] {
   switch (columnKey) {
     case 'To-Do':
-      return 'To-Do'
+      return 'Todo'
     case 'In-Progress':
-      return 'In-Progress'
+      return 'InProgress'
     case 'On-Hold':
-      return 'On-Hold'
+      return 'OnHold'
     case 'Done':
       return 'Done'
     default:
-      return currentStatus ?? 'To-Do'
+      return currentStatus ?? 'Todo'
   }
 }

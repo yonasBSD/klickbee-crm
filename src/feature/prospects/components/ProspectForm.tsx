@@ -2,13 +2,14 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Formik, Form, Field, ErrorMessage } from "formik"
 import * as Yup from "yup"
 import { Button } from "@/components/ui/Button"
 import SearchableDropdown from "@/components/ui/SearchableDropdown"
 import TagInput from "@/components/ui/TagInput"
 import { companyOptions } from "@/feature/deals/libs/companyData"
+import { useUserStore } from "@/feature/user/store/userStore"
 
 type ProspectFormValues = {
     fullName: string
@@ -22,12 +23,13 @@ type ProspectFormValues = {
 }
 
 const schema = Yup.object({
-    fullName: Yup.string().trim().required(""),
+    fullName: Yup.string().trim().required("Full name is required"),
     company: Yup.string().trim().required("Company is required"),
-    email: Yup.string().trim(),
-    status: Yup.string().oneOf(["New", "Qualified", "Converted", "Cold", "Warmlead","Notintrested"]).required("Stage is required"),
+    email: Yup.string().trim().email("Please enter a valid email address").required("Email is required"),
+    phone: Yup.string().trim().matches(/^[+]?[0-9\s\-()]{10,}$/, "Please enter a valid phone number"),
+    status: Yup.string().oneOf(["New", "Qualified", "Converted", "Cold", "Warmlead", "Notintrested"]).required("Status is required"),
     owner: Yup.string().trim().required("Owner is required"),
-    tags: Yup.array().of(Yup.string().trim().min(1)).max(10, "Up to 10 tags"),
+    tags: Yup.array().of(Yup.string().trim().min(1)).max(10, "Up to 10 tags allowed"),
     notes: Yup.string(),
 })
 
@@ -35,9 +37,9 @@ const initialValues: ProspectFormValues = {
     fullName: "",
     company: "",
     email: "",
-    status: "New",
-    phone : "",
-    owner: "Claire Brunet",
+    status: "",
+    phone: "",
+    owner: "",
     tags: [],
     notes: "",
 }
@@ -50,7 +52,22 @@ export default function ProspectForm({
     onCancel: () => void
 }) {
     const [tagInput, setTagInput] = useState("")
+    // Fetch users for owner dropdown
+    const { users, loading: usersLoading, fetchUsers } = useUserStore();
 
+    useEffect(() => {
+        if (users.length === 0) {
+            fetchUsers();
+        }
+    }, [users]);
+
+
+    // Create user options for the dropdown
+    const userOptions = users.map((user: any) => ({
+        id: user.id,
+        value: user.id,
+        label: user.name || user.email
+    }));
     return (
         <Formik<ProspectFormValues>
             initialValues={initialValues}
@@ -88,63 +105,64 @@ export default function ProspectForm({
                             />
                         </FieldBlock>
 
-                      
 
-                       
-                            <FieldBlock name="email" label="Email">
-                               <Field
+
+
+                        <FieldBlock name="email" label="Email">
+                            <Field
                                 id="email"
                                 name="email"
-                                placeholder="eg . exapmle.com"
+                                placeholder="e.g. example@company.com"
                                 className="w-full font-medium rounded-md shadow-sm border border-[var(--border-gray)] bg-background px-3 py-2 outline-none focus:ring-1 focus:ring-gray-400 focus:outline-none"
                             />
-                            </FieldBlock>
+                        </FieldBlock>
 
-                    
+
 
                         <FieldBlock name="phone" label="Phone">
-                               <Field
+                            <Field
                                 id="phone"
                                 name="phone"
                                 placeholder="+33 45832812"
                                 className="w-full font-medium rounded-md shadow-sm border border-[var(--border-gray)] bg-background px-3 py-2 outline-none focus:ring-1 focus:ring-gray-400 focus:outline-none"
                             />
-                            </FieldBlock>
-
-                        
-
-                        <FieldBlock name="owner" label="Owner">
-                            <Field
-                                as="select"
-                                id="owner"
-                                name="owner"
-                                className="w-full text-sm rounded-md shadow-sm border  border-[var(--border-gray)] bg-background px-3 py-2 outline-none focus:ring-1 focus:ring-gray-400 focus:outline-none"
-                            >
-                                <option>Claire Brunet</option>
-                                <option>Alex Kim</option>
-                                <option>Jordan Lee</option>
-                            </Field>
                         </FieldBlock>
 
-                         <FieldBlock name="status" label="Status">
+
+
+                        <FieldBlock name="owner" label="Owner">
+                            <SearchableDropdown
+                                name="owner"
+                                value={values.owner}
+                                options={userOptions}
+                                onChange={(val) => setFieldValue("owner", val)}
+                                placeholder="Select Owner"
+                                showIcon={false}
+                                maxOptions={20}
+                            />
+                        </FieldBlock>
+
+                        <FieldBlock name="status" label="Status">
                             <Field
                                 as="select"
                                 id="status"
                                 name="status"
                                 className="w-full text-sm rounded-md shadow-sm border  border-[var(--border-gray)] bg-background px-3 py-2 outline-none focus:ring-1 focus:ring-gray-400 focus:outline-none"
                             >
+                                <option value="" disabled>Select Status</option>
+
                                 <option value="New">New</option>
                                 <option value="Cold">Cold</option>
                                 <option value="Qualified">Qualified</option>
                                 <option value="Warmlead">Warm Lead</option>
                                 <option value="Converted">Converted</option>
                                 <option value="Notintrested">Not Intrested</option>
-                              
+
                             </Field>
                         </FieldBlock>
-                        
 
-                        <TagInput name='Tags' values={values.tags} setValue={(values: string[]) => setFieldValue('tags', values)} input={tagInput}  setInput={(value: string) => setTagInput(value)} />
+
+                        <TagInput name='Tags' values={values.tags} setValue={(values: string[]) => setFieldValue('tags', values)} input={tagInput} setInput={(value: string) => setTagInput(value)} />
 
                         <FieldBlock name="notes" label="Notes">
                             <Field
@@ -170,7 +188,7 @@ export default function ProspectForm({
                         >
                             Cancel
                         </Button>
-                        <Button type="submit" className="flex-1 bg-black text-white" disabled={isSubmitting || !isValid || !dirty}>
+                        <Button type="submit" className="flex-1 bg-black text-white" >
                             Save Prospect
                         </Button>
                     </div>
@@ -205,7 +223,7 @@ function Error({ name }: { name: string }) {
         <ErrorMessage
             name={name}
             render={(msg) => (
-                <p role="alert" className="text-sm text-destructive">
+                <p role="alert" className="text-sm text-red-600">
                     {msg}
                 </p>
             )}

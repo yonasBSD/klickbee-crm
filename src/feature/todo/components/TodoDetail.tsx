@@ -1,8 +1,19 @@
 "use client";
-import React from "react";
-import DetailModal from "@/components/detailPage";
 import type { TaskData } from "../types/types";
 import { ArrowUp, AlertTriangle, Minus, ChevronUp } from 'lucide-react';
+import DetailModal from "@/components/detailPage";
+// Helper function to format dates
+const formatDate = (dateString: string | undefined) => {
+  if (!dateString) return null;
+
+  const date = new Date(dateString);
+
+  return date.toLocaleDateString('en-US', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+}
 
 interface TodoDetailProps {
   isOpen: boolean;
@@ -17,16 +28,27 @@ interface TodoDetailProps {
 // Helper function to render status badge
 const renderStatusBadge = (status: string | null | undefined) => {
   const statusValue = String(status || '-')
+
+  // Map enum values to display values
+  const statusDisplayMap: Record<string, string> = {
+    'Todo': 'To-Do',
+    'InProgress': 'In-Progress',
+    'OnHold': 'On-Hold',
+    'Done': 'Done',
+  }
+
+  const displayText = statusDisplayMap[statusValue] || statusValue
+
   const cls = {
-    'To-Do': 'bg-[#E4E4E7] text-[#3F3F46]',
-    'In-Progress': 'bg-[#DBEAFE] text-[#1D4ED8]',
+    'Todo': 'bg-[#E4E4E7] text-[#3F3F46]',
+    'InProgress': 'bg-[#DBEAFE] text-[#1D4ED8]',
     'Done': 'bg-[#DCFCE7] text-[#166534]',
-    'On-Hold': 'bg-[#FFEAD5] text-[#9A3412]',
+    'OnHold': 'bg-[#FFEAD5] text-[#9A3412]',
   }[statusValue] || 'bg-[#E4E4E7] text-[#3F3F46]'
 
   return (
     <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${cls}`}>
-      {statusValue}
+      {displayText}
     </span>
   )
 }
@@ -74,18 +96,18 @@ export default function TodoDetail({
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={task.assignedImage}
-              alt={task.assignedTo ?? "Assignee"}
+              alt={typeof task.assignedTo === 'object' ? task.assignedTo?.name ?? "Assignee" : task.assignedTo ?? "Assignee"}
               className="w-6 h-6 rounded-full"
             />
           )}
-          {task.assignedTo ?? "-"}
+          {typeof task.assignedTo === 'object' ? task.assignedTo?.name : task.assignedTo ?? "-"}
         </span>
       ),
     },
-        { label: "Linked To", value: task.linkedTo ?? "-" },
+        { label: "Linked To", value: typeof task.linkedTo === 'object' ? task.linkedTo?.name : task.linkedTo ?? "-" },
 
-    task.dueDate && { label: "Due Date", value: task.dueDate },
-    task.lastUpdate && { label: "Last Update", value: task.lastUpdate },
+    task.dueDate && { label: "Due Date", value: formatDate(task.dueDate) },
+    task.lastUpdate && { label: "Last Update", value: formatDate(task.lastUpdate) },
   ].filter(Boolean) as { label: string; value: React.ReactNode }[];
 
   return (

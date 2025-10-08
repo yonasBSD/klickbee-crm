@@ -54,11 +54,12 @@ export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
     const limit = Number(url.searchParams.get("limit") ?? 50);
-    const ownerId = url.searchParams.get("ownerId");
+    const linkedId = url.searchParams.get("ownerId");
 
-    const where = ownerId ? { ownerId } : undefined;
+    const where = linkedId ? { linkedId } : undefined;
     const todos = await prisma.todo.findMany({
       where,
+      include:{linkedTo: true, assignedTo: true},
       orderBy: { createdAt: "desc" },
       take: Math.min(limit, 200),
     });
@@ -91,8 +92,8 @@ export async function handleMethodWithId(req: Request, id: string) {
 
       const body = await req.json();
 
-      // validate with zod
-      const parsed = updateTodoSchema.safeParse({ ...body, id });
+      // validate with zod - id comes from URL params, not body
+      const parsed = updateTodoSchema.safeParse(body);
       if (!parsed.success) {
         return NextResponse.json(
           { error: "Validation error", details: parsed.error.flatten() },
@@ -106,7 +107,7 @@ export async function handleMethodWithId(req: Request, id: string) {
         where: { id },
         data: {
           taskName: data.taskName,
-          linkedTo: data.linkedTo,
+          linkedId: data.linkedId,
           assignedTo: data.assignedTo ?? undefined,
           status: data.status,
           priority: data.priority,
