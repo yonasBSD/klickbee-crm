@@ -7,8 +7,8 @@ const priorityValues = ["high", "urgent", "medium", "low"] as const;
 export const createTodoSchema = z
   .object({
     taskName: z.string().trim().min(1, "Task name is required"),
-    status: z.enum(statusValues).default("Todo"),
-    priority: z.enum(priorityValues).default("high"),
+    status: z.string().default("Todo"),
+    priority: z.string().default("high"),
     linkedId: z.string().trim().min(1),
     assignedId: z.string().trim().optional().or(z.literal("")),
     dueDate: z.string().nullable().optional(),
@@ -17,16 +17,16 @@ export const createTodoSchema = z
   })
   .transform((data) => ({
     ...data,
-    // Map to Prisma enum casing - handle both camelCase and lowercase inputs
+    // Map form values to Prisma enum casing
     status:
-       data.status === "InProgress"
-        ? "InProgress"
-        :  data.status === "OnHold"
-        ? "OnHold"
-        : data.status === "Done"
-        ? "Done"
-        : data.status === "Todo"
+      data.status === "to-do"
         ? "Todo"
+        : data.status === "in-progress"
+        ? "InProgress"
+        : data.status === "on-hold"
+        ? "OnHold"
+        : data.status === "done"
+        ? "Done"
         : "Todo", // default fallback
     priority:
       data.priority === "urgent"
@@ -44,8 +44,8 @@ export const updateTodoSchema = z
   .object({
     id: z.string().trim().min(1).optional(), // Made optional since id comes from URL
     taskName: z.string().trim().optional(),
-    status: z.enum(statusValues).optional(),
-    priority: z.enum(priorityValues).optional(),
+    status: z.string().optional(),
+    priority: z.string().optional(),
     linkedId: z.string().trim().optional(),
     assignedId: z.string().trim().optional(),
     dueDate: z.string().nullable().optional(),
@@ -54,18 +54,18 @@ export const updateTodoSchema = z
   })
   .transform((data) => ({
     ...data,
-    // Map to Prisma enum casing - handle both camelCase and lowercase inputs
+    // Map form values to Prisma enum casing - handle both camelCase and lowercase inputs
     status:
       data.status === undefined
         ? undefined
-        : data.status === "InProgress"
-        ? "InProgress"
-        :  data.status === "OnHold"
-        ? "OnHold"
-        :  data.status === "Done"
-        ? "Done"
-        : data.status === "Todo"
+        : data.status === "to-do"
         ? "Todo"
+        : data.status === "in-progress"
+        ? "InProgress"
+        : data.status === "on-hold"
+        ? "OnHold"
+        : data.status === "done"
+        ? "Done"
         : "Todo", // default fallback
     priority:
       data.priority === undefined

@@ -53,12 +53,9 @@ export default function CompanieDetail({
         <span className="flex items-center gap-2">
           {company.owner && (
             <>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={company.ownerAvatar}
-                alt={company.owner.name || company.owner.email}
-                className="w-6 h-6 rounded-full"
-              />
+             <span className="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-xs">
+            {company.owner?.name?.charAt(0)?.toUpperCase() || company.owner?.email?.charAt(0)?.toUpperCase() || 'U'}
+          </span>
               {company.owner.name || company.owner.email}
             </>
           )}

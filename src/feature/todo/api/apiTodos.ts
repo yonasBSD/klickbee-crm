@@ -30,8 +30,9 @@ export async function POST(req: Request) {
     const created = await prisma.todo.create({
       data: {
         taskName: data.taskName,
-        linkedId: data.linkedId,
-        assignedId: data?.assignedId || null,
+        linkedTo: { connect: { id: data.linkedId } },
+        assignedTo: data.assignedId ? { connect: { id: data.assignedId } } : undefined,
+        owner: { connect: { id: session.user.id } },
         status: data.status,
         priority: data.priority,
         dueDate: data.dueDate ? new Date(data.dueDate) : null,
@@ -107,8 +108,8 @@ export async function handleMethodWithId(req: Request, id: string) {
         where: { id },
         data: {
           taskName: data.taskName,
-          linkedId: data.linkedId,
-          assignedTo: data.assignedTo ?? undefined,
+          linkedTo: data.linkedId ? { connect: { id: data.linkedId } } : undefined,
+          assignedTo: data.assignedId ? { connect: { id: data.assignedId } } : undefined,
           status: data.status,
           priority: data.priority,
           dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
