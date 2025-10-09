@@ -1,42 +1,42 @@
 'use client'
 import React, { useState } from 'react';
-import { X, Calendar, Clock, MapPin, Users, Link, FileText, Tag } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Meeting } from '../types/meeting';
 import { cn } from '@/libs/utils';
 import MeetingForm from './MeetingForm';
 import Modal from '@/components/ui/Modal';
+import { useMeetingsStore } from '../stores/useMeetingsStore';
 
 interface AddMeetingModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (meeting: Omit<Meeting, 'id'>) => void;
+  mode?: 'add' | 'edit';
+  meeting?: Meeting;
 }
 
 export const AddMeetingModal: React.FC<AddMeetingModalProps> = ({
   isOpen,
   onClose,
   onSave,
+  mode = 'add',
+  meeting,
 }) => {
+  const { addMeeting, updateMeeting } = useMeetingsStore();
+  
   if (!isOpen) return null;
   const handleSubmit = async (values: any) => {
     try {
-      // Call your API to create a new deal
-      const response = await fetch("/api/admin/meetings", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(values),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to create meeting");
+      if (mode === 'edit' && meeting) {
+        // Use store function to update the meeting
+        await updateMeeting(meeting.id!, values);
+      } else {
+        // Use store function to create a new meeting
+        await addMeeting(values);
       }
-
-      const data = await response.json();
-      console.log("Meeting created successfully:", data);
+      onClose();
     } catch (error) {
-      console.error("Error creating meeting:", error);
+      console.error(`Error ${mode === 'edit' ? 'updating' : 'creating'} meeting:`, error);
     }
   }
 
@@ -54,7 +54,9 @@ export const AddMeetingModal: React.FC<AddMeetingModalProps> = ({
         style={{ width: "400px" }} // exact width as requested
       >
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Add New Meeting</h2>
+          <h2 className="text-xl font-semibold text-gray-900">
+            {mode === 'edit' ? 'Update Meeting' : 'Add New Meeting'}
+          </h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
@@ -68,6 +70,8 @@ export const AddMeetingModal: React.FC<AddMeetingModalProps> = ({
             handleSubmit(values);
           }}
           onClose={onClose}
+          mode={mode}
+          initialData={meeting}
         />
 
       </aside>

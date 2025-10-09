@@ -6,35 +6,31 @@ import { cn } from "@/libs/utils"
 import Modal from "@/components/ui/Modal"
 import ProspectForm from "./ProspectForm"
 import { useProspectsStore } from "../stores/useProspectsStore"
+import { Prospect } from "../types/types"
+import toast from "react-hot-toast"
 
 type ProspectSlideOverProps = {
   open: boolean
   onClose: () => void
+  mode?: 'add' | 'edit'
+    prospect?: Prospect
 }
 
-export default function ProspectSlideOver({ open, onClose }: ProspectSlideOverProps) {
+export default function ProspectSlideOver({ open, onClose , mode = 'add', prospect }: ProspectSlideOverProps) {
   const { addProspect } = useProspectsStore();
-
-  const handleSubmit = async (values: any) => {
+  const { updateProspect } = useProspectsStore();
+ const handleSubmit = async (values: any) => {
     try {
-      // Convert form values to match the store's expected format
-      const prospectData = {
-        fullName: values.fullName,
-        company: values.company,
-        email: values.email || null,
-        phone: values.phone || null,
-        status: values.status,
-        tags: values.tags || [],
-        notes: values.notes || null,
-      };
-
-      await addProspect(prospectData);
+      if (mode === 'edit' && prospect) {
+        await updateProspect(prospect.id, values);
+      } else {
+        await addProspect(values);
+      }
       onClose();
-    } catch (err) {
-      console.error("Error creating prospect:", err);
+    } catch (error) {
+      toast.error(`Error ${mode === 'edit' ? 'updating' : 'creating'} deal:`);
     }
-  }
-
+  };
   return (
     <Modal open={open} onClose={onClose}>
       <aside
@@ -51,8 +47,8 @@ export default function ProspectSlideOver({ open, onClose }: ProspectSlideOverPr
         {/* Header */}
         <header className="flex items-center justify-between gap-4 p-4 border-b border-[var(--border-gray)]">
           <h2 id="prospect-slide-title" className="text-base font-semibold leading-[28px] text-pretty">
-            Add New Prospect
-          </h2>
+  {mode === 'edit' ? 'Update Prospect' : 'Add New Prospect'}
+            </h2>
           <button onClick={onClose} aria-label="Close">
             <X className="size-4" />
           </button>
@@ -63,6 +59,8 @@ export default function ProspectSlideOver({ open, onClose }: ProspectSlideOverPr
           <ProspectForm
             onCancel={onClose}
             onSubmit={(values) => handleSubmit(values)}
+             mode={mode}
+            initialData={prospect}
           />
         </div>
       </aside>

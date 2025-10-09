@@ -161,7 +161,7 @@ const DetailModal: React.FC<DetailModalProps> = ({
                 <Trash2 size={15}/>
               </Button>
             )}
-            <div className="flex gap-4">
+            <div className="flex gap-2">
                 {onExport && (
                 <Button
                   onClick={onExport}

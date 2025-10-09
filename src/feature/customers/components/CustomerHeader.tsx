@@ -7,6 +7,7 @@ import { useEffect, useState } from "react"
 import { filterData, type FilterData } from "../libs/fillterData"
 import CustomerModal from "./CustomersModel"
 import { useSearchParams } from "next/navigation"
+import { Customer } from "../types/types"
 
 
 const statusOptions = [
@@ -17,7 +18,14 @@ const statusOptions = [
 ]
 const searchableCategories: (keyof FilterData)[] = ["owner", "tags"];
 
-export function CustomerHeader() {
+interface CustomerHeaderProps {
+  editCustomer?: Customer | null;
+  showEditModal?: boolean;
+  onEditCustomer?: (customer: Customer) => void;
+  onCloseEditModal?: () => void;
+}
+
+export function CustomerHeader({ editCustomer, showEditModal, onEditCustomer, onCloseEditModal }: CustomerHeaderProps = {}) {
   const [selectedUser, setSelectedUser] = useState("all")
   const [filters, setFilters] = useState(filterData);
   const [showFilter, setShowFilter] = useState(false)
@@ -32,6 +40,13 @@ export function CustomerHeader() {
             setShowNewCustomers(true)
           }
         }, [searchParams])
+
+  const handleCloseModal = () => {
+    setShowNewCustomers(false);
+    if (onCloseEditModal) {
+      onCloseEditModal();
+    }
+  };
 
   const handleToggle = (category: keyof FilterData, id: string) => {
     setFilters((prev) => ({
@@ -114,7 +129,8 @@ export function CustomerHeader() {
           <span className="text-[#FAFAFA]">Add Customer</span>
         </Button>
       </div>
-            <CustomerModal open={showNewCustomers} onClose={() => setShowNewCustomers(false)} />
+            <CustomerModal open={showNewCustomers || showEditModal || false} 
+        onClose={handleCloseModal} mode={editCustomer ? 'edit' : 'add'} customer={editCustomer || undefined} />
       
       {showFilter && <Filter filters={filters} handleToggle={handleToggle} showFilter={showFilter} setShowFilter={() => setShowFilter((prev: boolean) => !prev)} searchableCategories={searchableCategories} setSearchQueries={setSearchQueries} searchQueries={searchQueries} classes="w-[300px] bg-white" />}
 

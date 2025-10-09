@@ -1,6 +1,7 @@
 import { useMeetings } from "../hooks/useMeetings";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { Meeting } from "../types/meeting";
 
 import { AddMeetingModal } from "./AddMeetingModal";
 import { CalendarHeader } from "./CalendarHeader";
@@ -32,6 +33,15 @@ export const MeetingsCalendar: React.FC = () => {
     closeAddMeeting,
   } = useMeetings();
   const searchParams = useSearchParams();
+  
+  // Local state for edit functionality
+  const [editMeeting, setEditMeeting] = useState<Meeting | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  
+  const handleCloseEditModal = () => {
+    setShowEditModal(false);
+    setEditMeeting(null);
+  };
 
   // Auto-open Add Meeting when navigated with ?new=meeting
   useEffect(() => {
@@ -180,11 +190,33 @@ const getHeaderDate = () => {
         onSave={addMeeting}
       />
 
+      {/* Edit Meeting Modal */}
+      <AddMeetingModal
+        isOpen={showEditModal}
+        onClose={handleCloseEditModal}
+        onSave={(meetingData) => {
+          if (editMeeting) {
+            updateMeeting(editMeeting.id!, meetingData);
+          }
+        }}
+        mode="edit"
+        meeting={editMeeting || undefined}
+      />
+
       <MeetingDetailModal
         isOpen={isMeetingDetailOpen}
         meeting={selectedMeeting}
         onClose={closeMeetingDetail}
-        onUpdate={updateMeeting}
+        onEdit={(meeting) => {
+          // Open the AddMeetingModal in edit mode
+          setEditMeeting(meeting);
+          setShowEditModal(true);
+          closeMeetingDetail();
+        }}
+        onReschedule={(id) => {
+          // TODO: Implement reschedule functionality
+          console.log('Reschedule meeting:', id);
+        }}
         onDelete={deleteMeeting}
       />
     </div>

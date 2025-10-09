@@ -6,6 +6,7 @@ import { useState } from "react"
 import Filter from "@/components/filter"
 import { filterData, type FilterData } from "../libs/filterData"
 import ProspectModel from './ProspectModel'
+import { Prospect } from "../types/types"
 
 
 
@@ -23,8 +24,19 @@ export function ProspectHeader() {
     const [filters, setFilters] = useState(filterData);
       const [searchQueries, setSearchQueries] = useState<Record<string, string>>({});
         const [showNewProspect, setShowNewProspect] = useState<boolean>(false);
+  const [editProspect, setEditProspect] = useState<Prospect | null>(null);
 
-     const handleToggle = (category: keyof FilterData, id: string) => {
+       const handleEditDeal = (prospect: Prospect) => {
+         setEditProspect(prospect);
+         setShowNewProspect(true);
+       };
+     
+       const handleCloseModal = () => {
+         setShowNewProspect(false);
+         setEditProspect(null);
+       };
+  
+  const handleToggle = (category: keyof FilterData, id: string) => {
       setFilters((prev) => ({
         ...prev,
         [category]: prev[category].map((item) =>
@@ -106,7 +118,8 @@ export function ProspectHeader() {
          <span className="text-[#FAFAFA]">Add Prospects</span> 
         </Button>
       </div>
-        <ProspectModel open={showNewProspect} onClose={() => setShowNewProspect(false)} />
+        <ProspectModel open={showNewProspect} 
+        onClose={handleCloseModal} mode={editProspect ? 'edit' : 'add'} prospect={editProspect || undefined} />
       
      {showFilter && <Filter filters={filters} handleToggle={handleToggle} showFilter={showFilter} setShowFilter={() => setShowFilter((prev: boolean) => !prev)} searchableCategories={searchableCategories} setSearchQueries={setSearchQueries} searchQueries={searchQueries} classes="w-[300px] bg-white" />}
       

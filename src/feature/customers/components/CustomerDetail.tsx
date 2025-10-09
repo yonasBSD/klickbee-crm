@@ -25,7 +25,7 @@ interface CustomerDetailProps {
   customer: Customer | null;
   onClose: () => void;
   onDelete?: (id: string) => void;
-  onEdit?: (id: string) => void;
+  onEdit?: (customer: Customer) => void;
   onAddNotes?: (id: string) => void;
   onExport?: (id: string) => void;
 }
@@ -68,7 +68,8 @@ export default function CustomerDetail({
       details={details}
       onClose={onClose}
       onDelete={onDelete ? () => onDelete(customer.id) : undefined}
-      onEdit={onEdit ? () => onEdit(customer.id) : undefined}
+      onEdit={onEdit ? () => onEdit(customer as Customer) : undefined}
+      editLabel="Edit Customer"
       onAddNotes={onAddNotes ? () => onAddNotes(customer.id) : undefined}
       onExport={onExport ? () => onExport(customer.id) : undefined}
     />

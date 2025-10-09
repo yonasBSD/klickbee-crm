@@ -26,4 +26,4 @@ export interface Meeting {
 
 export type ViewType = 'daily' | 'weekly' | 'monthly' | 'yearly';
 
-export type MeetingStatus = "scheduled" | "completed" | "cancelled";
+export type MeetingStatus = "scheduled" | "confirmed" | "cancelled";

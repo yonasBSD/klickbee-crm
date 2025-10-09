@@ -6,6 +6,7 @@ import { useState } from "react"
 import { filterData, type FilterData } from "../libs/fillterData"
 import Filter from "@/components/filter"
 import CompanyModel from './CompaniesModel'
+import { Company } from "../types/types"
 
 
 const statusOptions = [
@@ -16,13 +17,27 @@ const statusOptions = [
 ]
 const searchableCategories: (keyof FilterData)[] = ["owner", "tags"];
 
-export function CompaniesHeader() {
+interface CompaniesHeaderProps {
+  editCompany?: Company | null;
+  showEditModal?: boolean;
+  onEditCompany?: (company: Company) => void;
+  onCloseEditModal?: () => void;
+}
+
+export function CompaniesHeader({ editCompany, showEditModal, onEditCompany, onCloseEditModal }: CompaniesHeaderProps = {}) {
   const [selectedUser, setSelectedUser] = useState("all")
   const [filters, setFilters] = useState(filterData);
   const [showFilter, setShowFilter] = useState(false)
 
   const [searchQueries, setSearchQueries] = useState<Record<string, string>>({});
   const [showNewCompany, setShowNewCompany] = useState<boolean>(false);
+
+  const handleCloseModal = () => {
+    setShowNewCompany(false);
+    if (onCloseEditModal) {
+      onCloseEditModal();
+    }
+  };
 
   const handleToggle = (category: keyof FilterData, id: string) => {
     setFilters((prev) => ({
@@ -106,7 +121,8 @@ export function CompaniesHeader() {
           <span className="text-[#FAFAFA]">Add Company</span>
         </Button>
       </div>
-      <CompanyModel open={showNewCompany} onClose={() => setShowNewCompany(false)} />
+      <CompanyModel open={showNewCompany || showEditModal || false} 
+        onClose={handleCloseModal} mode={editCompany ? 'edit' : 'add'} company={editCompany || undefined} />
       
       {showFilter && <Filter filters={filters} handleToggle={handleToggle} showFilter={showFilter} setShowFilter={() => setShowFilter((prev: boolean) => !prev)} searchableCategories={searchableCategories} setSearchQueries={setSearchQueries} searchQueries={searchQueries} classes="w-[300px] bg-white" />}
 

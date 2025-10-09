@@ -82,6 +82,8 @@ export const customerColumns: TableColumn<Company>[] = [
 export default function Companies () {
   const [selected, setSelected] = React.useState<Company | null>(null)
   const [open, setOpen] = React.useState(false)
+  const [editCompany, setEditCompany] = React.useState<Company | null>(null)
+  const [showEditModal, setShowEditModal] = React.useState(false)
 
   const { companies, fetchCompanies, loading, deleteCompany } = useCompaniesStore();
 
@@ -91,10 +93,21 @@ export default function Companies () {
 
   const openDetail = (c: Company) => { setSelected(c); setOpen(true) }
   const closeDetail = () => { setOpen(false); setSelected(null) }
+  
+  const handleEditCompany = (company: Company) => {
+    setEditCompany(company)
+    setShowEditModal(true)
+    closeDetail() // Close detail modal when opening edit
+  }
+  
+  const closeEditModal = () => {
+    setShowEditModal(false)
+    setEditCompany(null)
+  }
 
   return (
     <div className='overflow-x-hidden'>
-      <CompaniesHeader/>
+      <CompaniesHeader editCompany={editCompany} showEditModal={showEditModal} onEditCompany={handleEditCompany} onCloseEditModal={closeEditModal} />
       <div className='py-8 px-6 overflow-x-hidden'>
 
         <Table
@@ -111,9 +124,8 @@ export default function Companies () {
             await deleteCompany(id);
             closeDetail();
           }}
-          onEdit={(id: string) => {
-            // Handle edit logic here
-            console.log('Edit company:', id);
+          onEdit={(company: Company) => {
+            handleEditCompany(company);
           }}
           onAddNotes={(id: string) => {
             // Handle add notes logic here

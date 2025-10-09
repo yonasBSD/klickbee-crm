@@ -25,7 +25,7 @@ interface CompanieDetailProps {
   company: Company | null;
   onClose: () => void;
   onDelete?: (id: string) => void;
-  onEdit?: (id: string) => void;
+  onEdit?: (company: Company) => void;
   onAddNotes?: (id: string) => void;
   onExport?: (id: string) => void;
 }
@@ -75,7 +75,8 @@ export default function CompanieDetail({
       details={details}
       onClose={onClose}
       onDelete={onDelete ? () => onDelete(company.id) : undefined}
-      onEdit={onEdit ? () => onEdit(company.id) : undefined}
+      onEdit={onEdit ? () => onEdit(company as Company) : undefined}
+      editLabel="Edit Company"
       onAddNotes={onAddNotes ? () => onAddNotes(company.id) : undefined}
       onExport={onExport ? () => onExport(company.id) : undefined}
     />

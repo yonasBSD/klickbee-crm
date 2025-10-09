@@ -27,8 +27,9 @@ interface ProspectDetailProps {
   isOpen: boolean;
   prospect: Prospect | null;
   onClose: () => void;
+  onEdit?: (prospect:Prospect ) => void;
+  
   onDelete?: (id: string) => void;
-  onEdit?: (id: string) => void;
   onAddNotes?: (id: string) => void;
   onExport?: (id: string) => void;
 }
@@ -87,7 +88,8 @@ export default function ProspectDetail({
       details={details}
       onClose={onClose}
       onDelete={onDelete ? () => onDelete(prospect.id) : undefined}
-      onEdit={onEdit ? () => onEdit(prospect.id) : undefined}
+        onEdit={onEdit ? () => onEdit(prospect as Prospect) : undefined}
+           editLabel="Edit Prospect"
       onAddNotes={onAddNotes ? () => onAddNotes(prospect.id) : undefined}
       onExport={onExport ? () => onExport(prospect.id) : undefined}
     />

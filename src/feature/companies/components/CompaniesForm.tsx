@@ -10,6 +10,7 @@ import TagInput from "@/components/ui/TagInput"
 import UploadButton from "@/components/ui/UploadButton"
 import { useUserStore } from "@/feature/user/store/userStore"
 import SearchableDropdown from "@/components/ui/SearchableDropdown"
+import { Company } from "../types/types"
 
 type CompanyFormValues = {
     fullName: string
@@ -53,12 +54,16 @@ const initialValues: CompanyFormValues = {
     files: [],
 }
 
-export default function CustomerForm({
+export default function CompaniesForm({
     onSubmit,
     onCancel,
+    mode = 'add',
+    initialData,
 }: {
     onSubmit: (values: CompanyFormValues) => void
     onCancel: () => void
+    mode?: 'add' | 'edit'
+    initialData?: Company
 }) {
     const [tagInput, setTagInput] = useState("")
     const [assignInput, setAssignInput] = useState("")
@@ -81,6 +86,52 @@ export default function CustomerForm({
         label: user.name || user.email
     }));
 
+    const getOptionLabel = (options: {id: string, label: string}[], value: string) => {
+        // First try to find by ID
+        const optionById = options.find(opt => opt.id === value);
+        if (optionById) return optionById.label;
+
+        // Then try to find by label (in case value is already a label)
+        const optionByLabel = options.find(opt => opt.label === value);
+        if (optionByLabel) return optionByLabel.label;
+
+        // If not found in options, return the value as-is (for dynamic values)
+        return value;
+    };
+
+    const getInitialValues = (): CompanyFormValues => {
+        if (mode === 'edit' && initialData) {
+            return {
+                fullName: initialData.fullName || '',
+                industry: initialData.industry || '',
+                email: initialData.email || '',
+                website: initialData.website || '',
+                status: initialData.status || '',
+                phone: initialData.phone || '',
+                owner: getOptionLabel(userOptions, 
+                    typeof initialData.owner === 'object' && initialData.owner 
+                        ? initialData.owner.id 
+                        : initialData.owner || ''
+                ),
+                tags: (() => {
+                    const tags = initialData.tags;
+                    if (!tags) return [];
+                    if (Array.isArray(tags)) {
+                        return (tags as string[]).filter(Boolean);
+                    }
+                    if (typeof tags === 'string') {
+                        return (tags as string).split(',').map(tag => tag.trim()).filter(Boolean);
+                    }
+                    return [];
+                })(),
+                assing: [], // Default empty for assignments
+                notes: '', // Company type doesn't have notes in the schema
+                files: [], // Default empty for files
+            };
+        }
+        return initialValues;
+    };
+
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (!files || files.length === 0) return;
@@ -100,18 +151,39 @@ export default function CustomerForm({
 
     return (
         <Formik<CompanyFormValues>
-            initialValues={initialValues}
+            enableReinitialize
+            initialValues={getInitialValues()}
             validationSchema={schema}
-            onSubmit={(vals, { setSubmitting, resetForm }) => {
-                const cleaned = {
-                    ...vals,
-                    assing: vals.assing ? vals.assing.map((t) => t.trim()).filter(Boolean) : [],
-                    tags: vals.tags ? vals.tags.map((t) => t.trim()).filter(Boolean) : [],
-                    files: uploadedFiles
+            onSubmit={async (vals, { setSubmitting, resetForm }) => {
+                try {
+                    const payload = {
+                        ...vals,
+                        assing: vals.assing ? vals.assing.map((t) => t.trim()).filter(Boolean) : [],
+                        tags: vals.tags ? vals.tags.map((t) => t.trim()).filter(Boolean) : [],
+                        files: uploadedFiles
+                    };
+
+                    // Run validation manually in case of async conditions
+                    await schema.validate(payload, { abortEarly: false });
+
+                    onSubmit(payload);
+
+                    // Only reset form in add mode, not in edit mode
+                    if (mode === 'add') {
+                        resetForm();
+                    }
+                } catch (error: any) {
+                    if (error.name === "ValidationError") {
+                        // Loop through validation errors
+                        error.inner.forEach((err: any) => {
+                            console.error(err.message);
+                        });
+                    } else {
+                        console.error("Failed to save company. Please try again.");
+                    }
+                } finally {
+                    setSubmitting(false);
                 }
-                onSubmit(cleaned)
-                setSubmitting(false)
-                resetForm()
             }}
         >
             {({ isSubmitting, isValid, dirty, values, setFieldValue, resetForm }) => (

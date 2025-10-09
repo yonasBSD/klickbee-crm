@@ -30,10 +30,11 @@ export async function POST(req: Request) {
     const parsed = createMeetingSchema.safeParse({
       ...bodyRaw,
       startDate: toDate(bodyRaw.startDate),
-      startTime: combineToISO(bodyRaw.startDate, bodyRaw.startTime),
-      endTime: combineToISO(bodyRaw.startDate, bodyRaw.endTime),
+      startTime: toDate(bodyRaw.startTime),
+      endTime: toDate(bodyRaw.endTime),
       ownerId: session.user.id,
-      linkedId: session.user.id,
+      linkedId: bodyRaw.linkedTo && bodyRaw.linkedTo.trim() !== "" ? bodyRaw.linkedTo : session.user.id, // Map linkedTo to linkedId
+      assignedTo: bodyRaw.assignedTo && bodyRaw.assignedTo.trim() !== "" ? bodyRaw.assignedTo : null, // Pass through assignedTo, null if empty
     });
     if (!parsed.success) {
       return NextResponse.json(
@@ -59,7 +60,7 @@ export async function POST(req: Request) {
         ends: data.ends,
         linkedId: data.linkedId,
         location: data.location ?? null,
-        assignedId: data.assignedId ?? null,
+        assignedId: data.assignedTo && data.assignedTo.trim() !== "" ? data.assignedTo : null, // Map assignedTo to assignedId, null if empty
         participants: data.participants ?? [],
         status: data.status,
         tags: data.tags ?? [],
@@ -126,16 +127,16 @@ export async function handleMethodWithId(req: Request, id: string) {
         data: {
           title: data.title,
           startDate: toDate(data.startDate),
-          startTime: combineToISO(data.startDate, data.startTime),
-          endTime: combineToISO(data.startDate, data.endTime),
+          startTime: toDate(data.startTime),
+          endTime: toDate(data.endTime),
           repeatMeeting: data.repeatMeeting,
           frequency: data.frequency,
           repeatOn: data.repeatOn ?? undefined,
           repeatEvery: data.repeatEvery,
           ends: data.ends,
-          linkedTo: data.linkedTo,
+          linkedId: data.linkedTo && data.linkedTo.trim() !== "" ? data.linkedTo : session.user.id, // Use linkedId, fallback to current user
           location: data.location ?? undefined,
-          assignedTo: data.assignedTo ?? undefined,
+          assignedId: data.assignedTo && data.assignedTo.trim() !== "" ? data.assignedTo : null, // Use assignedId, null if empty
           participants: data.participants ?? undefined,
           status: data.status,
           tags: data.tags ?? undefined,

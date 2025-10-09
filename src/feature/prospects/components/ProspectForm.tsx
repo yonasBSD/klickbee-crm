@@ -10,6 +10,7 @@ import SearchableDropdown from "@/components/ui/SearchableDropdown"
 import TagInput from "@/components/ui/TagInput"
 import { companyOptions } from "@/feature/deals/libs/companyData"
 import { useUserStore } from "@/feature/user/store/userStore"
+import { Prospect } from "../types/types"
 
 type ProspectFormValues = {
     fullName: string
@@ -47,9 +48,13 @@ const initialValues: ProspectFormValues = {
 export default function ProspectForm({
     onSubmit,
     onCancel,
+     mode = 'add',
+    initialData,
 }: {
     onSubmit: (values: ProspectFormValues) => void
     onCancel: () => void
+    mode?: 'add' | 'edit'
+  initialData?: Prospect
 }) {
     const [tagInput, setTagInput] = useState("")
     // Fetch users for owner dropdown
@@ -68,21 +73,88 @@ export default function ProspectForm({
         value: user.id,
         label: user.name || user.email
     }));
+       const getOptionLabel = (options: {id: string, label: string}[], value: string) => {
+        // First try to find by ID
+        const optionById = options.find(opt => opt.id === value);
+        if (optionById) return optionById.label;
+
+        // Then try to find by label (in case value is already a label)
+        const optionByLabel = options.find(opt => opt.label === value);
+        if (optionByLabel) return optionByLabel.label;
+
+        // If not found in options, return the value as-is (for dynamic values)
+        return value;
+    };
+    const getInitialValues = (): ProspectFormValues => {
+        if (mode === 'edit' && initialData) {
+            const initialVals = {
+                fullName: initialData.fullName || '',
+                company: getOptionLabel(companyOptions, initialData.company),
+                email: initialData.email || '',
+                status: initialData.status || '',
+                phone: initialData.phone || '',
+                owner: getOptionLabel(userOptions, 
+                    typeof initialData.owner === 'object' && initialData.owner 
+                        ? initialData.owner.id 
+                        : initialData.owner || ''
+                ),
+                tags: (() => {
+                    const tags = initialData.tags;
+                    if (!tags) return [];
+                    if (Array.isArray(tags)) {
+                        return (tags as string[]).filter(Boolean);
+                    }
+                    if (typeof tags === 'string') {
+                        return (tags as string).split(',').map(tag => tag.trim()).filter(Boolean);
+                    }
+                    return [];
+                })(),
+                notes: initialData.notes || '',
+            };
+            return initialVals;
+        }
+        return initialValues;
+    };
+
+    
+
+
     return (
         <Formik<ProspectFormValues>
-            initialValues={initialValues}
+            enableReinitialize
+            initialValues={getInitialValues()}
             validationSchema={schema}
-            onSubmit={(vals, { setSubmitting, resetForm }) => {
-                const cleaned = {
-                    ...vals,
-                    tags: vals.tags.map((t) => t.trim()).filter(Boolean),
+            onSubmit={async (vals, { setSubmitting, resetForm }) => {
+                try {
+                    const payload = {
+                        ...vals,
+                        tags: vals.tags ? vals.tags.map((t) => t.trim()).filter(Boolean) : [],
+                    };
+
+                    // Run validation manually in case of async conditions
+                    await schema.validate(payload, { abortEarly: false });
+
+                    onSubmit(payload);
+
+                    // Only reset form in add mode, not in edit mode
+                    if (mode === 'add') {
+                        resetForm();
+                    }
+                } catch (error: any) {
+                    if (error.name === "ValidationError") {
+                        // Loop through validation errors
+                        error.inner.forEach((err: any) => {
+                            console.error(err.message);
+                        });
+                    } else {
+                        console.error("Failed to save prospect. Please try again.");
+                    }
+                } finally {
+                    setSubmitting(false);
                 }
-                onSubmit(cleaned)
-                setSubmitting(false)
-                resetForm()
             }}
         >
-            {({ isSubmitting, isValid, dirty, values, setFieldValue, resetForm }) => (
+            {({ values, setFieldValue, resetForm }) => (
                 <Form className="flex min-h-full flex-col gap-4">
                     {/* Fields container */}
                     <div className="px-4 py-4 flex flex-col gap-4 ">

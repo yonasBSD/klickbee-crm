@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Table } from '@/components/ui/Table';
 
 import { ProspectHeader } from './ProspectHeader'
@@ -7,6 +7,7 @@ import { TableColumn } from '@/components/ui/Table'
 import { Prospect } from '../types/types'
 import ProspectDetail from './ProspectDetail'
 import { useProspectsStore } from '../stores/useProspectsStore'
+import  ProspectModel from './ProspectModel'
 
 export const prospectsColumns: TableColumn<Prospect>[] = [
   {
@@ -90,6 +91,9 @@ export const prospectsColumns: TableColumn<Prospect>[] = [
 export default function Prospects () {
   const [selected, setSelected] = React.useState<Prospect | null>(null)
   const [open, setOpen] = React.useState(false)
+    const [showModal, setShowModal] = React.useState<boolean>(false);
+    const [editProspect, setEditProspect] = useState<Prospect | null>(null);
+  
 
   const { prospects, fetchProspects, loading, deleteProspect } = useProspectsStore();
 
@@ -97,6 +101,11 @@ export default function Prospects () {
     fetchProspects();
   }, [fetchProspects]);
 
+   const handleEditDeal = (prospect: Prospect) => {
+      setEditProspect(prospect);
+      setShowModal(true);
+      setOpen(false);
+    };
   const openDetail = (prospect: Prospect) => { setSelected(prospect); setOpen(true) }
   const closeDetail = () => { setOpen(false); setSelected(null) }
 
@@ -119,10 +128,7 @@ export default function Prospects () {
               await deleteProspect(id);
               closeDetail();
             }}
-            onEdit={(id: string) => {
-              // Handle edit logic here
-              console.log('Edit prospect:', id);
-            }}
+            onEdit={handleEditDeal}
             onAddNotes={(id: string) => {
               // Handle add notes logic here
               console.log('Add notes for prospect:', id);
@@ -132,6 +138,8 @@ export default function Prospects () {
               console.log('Export prospect:', id);
             }}
           />
+          <ProspectModel
+           open={showModal} onClose={() => setShowModal(false)} mode={editProspect ? 'edit' : 'add'} prospect={editProspect || undefined}/>
         </div>
       </div>
   )

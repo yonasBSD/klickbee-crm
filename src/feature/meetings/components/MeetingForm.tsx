@@ -8,6 +8,7 @@ import TagInput from "@/components/ui/TagInput";
 import { useState } from "react";
 import UploadButton from "@/components/ui/UploadButton";
 import { Button } from "@/components/ui/Button";
+import { Meeting } from "../types/meeting";
 
 // ✅ Enhanced Yup validation with comprehensive rules
 const MeetingSchema = Yup.object().shape({
@@ -159,13 +160,40 @@ const initialValues = {
 
 type formProps = {
   onSubmit: (values: any) => void;
-  onClose: () => void
+  onClose: () => void;
+  mode?: 'add' | 'edit';
+  initialData?: Meeting;
 }
-export default function MeetingForm({ onSubmit, onClose }: formProps) {
+export default function MeetingForm({ onSubmit, onClose, mode = 'add', initialData }: formProps) {
   const [tagInput, setTagInput] = useState("")
   const [participantsInput, setParticipantsInput] = useState("")
   const [uploading, setUploading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
+
+  const getInitialValues = () => {
+    if (mode === 'edit' && initialData) {
+      return {
+        title: initialData.title || '',
+        startDate: initialData.startDate ? new Date(initialData.startDate) : new Date(),
+        startTime: initialData.startTime ? new Date(initialData.startTime).toTimeString().slice(0, 5) : '09:00',
+        endTime: initialData.endTime ? new Date(initialData.endTime).toTimeString().slice(0, 5) : '10:00',
+        repeatMeeting: initialData.repeatMeeting || false,
+        frequency: initialData.frequency || 'Daily',
+        repeatOn: initialData.repeatOn || '',
+        repeatEvery: initialData.repeatEvery || 1,
+        ends: initialData.ends || 'Never',
+        linkedTo: initialData.linkedTo || '',
+        location: initialData.location || '',
+        assignedTo: initialData.assignedTo || '',
+        participants: initialData.participants || [],
+        status: initialData.status || 'scheduled',
+        tags: initialData.tags || [],
+        notes: initialData.notes || '',
+        files: initialData.files || [],
+      };
+    }
+    return initialValues;
+  };
 
   const renderDuration = (frequency: string | undefined) => {
     if (!frequency) return;
@@ -197,39 +225,56 @@ export default function MeetingForm({ onSubmit, onClose }: formProps) {
 
   return (
     <Formik<any>
-      initialValues={initialValues}
+      enableReinitialize
+      initialValues={getInitialValues()}
       validationSchema={MeetingSchema}
-      onSubmit={(vals, { setSubmitting, resetForm }) => {
-        // Convert time strings to Date objects for API compatibility
-        const now = new Date();
-        const currentDate = vals.startDate || now;
+      onSubmit={async (vals, { setSubmitting, resetForm }) => {
+        try {
+          // Prepare payload with proper ISO datetime strings
+          const currentDate = vals.startDate ? new Date(vals.startDate) : new Date();
+          const dateStr = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD
+          
+          // Create proper ISO datetime strings
+          const startTimeISO = vals.startTime ? `${dateStr}T${vals.startTime}:00.000Z` : null;
+          const endTimeISO = vals.endTime ? `${dateStr}T${vals.endTime}:00.000Z` : null;
+          
+          const payload = {
+            ...vals,
+            startDate: currentDate.toISOString(), // Full ISO datetime for startDate
+            startTime: startTimeISO,              // Full ISO datetime for startTime
+            endTime: endTimeISO,                  // Full ISO datetime for endTime
+            tags: vals.tags ? vals.tags.map((t: string) => t.trim()).filter(Boolean) : [],
+            participants: vals.participants ? vals.participants.map((p: string) => p.trim()).filter(Boolean) : [],
+            files: uploadedFiles
+          };
 
-        const startDateTime = new Date(currentDate);
-        const [startHour, startMinute] = (vals.startTime || "09:00").split(':');
-        startDateTime.setHours(parseInt(startHour), parseInt(startMinute), 0, 0);
+          // Run validation manually BEFORE converting times to Date objects
+          await MeetingSchema.validate(vals, { abortEarly: false });
 
-        const endDateTime = new Date(currentDate);
-        const [endHour, endMinute] = (vals.endTime || "10:00").split(':');
-        endDateTime.setHours(parseInt(endHour), parseInt(endMinute), 0, 0);
+          onSubmit(payload);
 
-        const payload = {
-          ...vals,
-          startDate: startDateTime,
-          startTime: startDateTime,
-          endTime: endDateTime,
-          tags: vals.tags ? vals.tags.map((t: string) => t.trim()).filter(Boolean) : [],
-          files: uploadedFiles
-        };
-        onSubmit(payload);
-        setSubmitting(false)
-        resetForm()
+          // Only reset form in add mode, not in edit mode
+          if (mode === 'add') {
+            resetForm();
+          }
+        } catch (error: any) {
+          if (error.name === "ValidationError") {
+            // Loop through validation errors
+            error.inner.forEach((err: any) => {
+              console.error(err.message);
+            });
+          } else {
+            console.error("Failed to save meeting. Please try again.");
+          }
+        } finally {
+          setSubmitting(false);
+        }
       }}
     >
-      {({ values, setFieldValue }) => (
-        <Form className="flex flex-col gap-4 ">
-          {/* Title */}
+      {({ values, setFieldValue, isSubmitting }) => (
+        <Form className="flex flex-col h-full">
+          {/* Meeting Title */}
           <div className="p-4">
-
             <TextInput label="Meeting Title" name="title" placeholder="e.g. Call with ADE Construction" />
           </div>
 

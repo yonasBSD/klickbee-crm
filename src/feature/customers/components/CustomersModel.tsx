@@ -6,27 +6,36 @@ import { cn } from "@/libs/utils"
 import Modal from "@/components/ui/Modal"
 import CustomerForm from "./CustomersForm"
 import { useCustomersStore } from "../stores/useCustomersStore"
+import { Customer } from "../types/types"
 import toast from "react-hot-toast"
 
 type DealSlideOverProps = {
   open: boolean
   onClose: () => void
+  mode?: 'add' | 'edit'
+  customer?: Customer
 }
 
-export default function CustomerSlideOver({ open, onClose }: DealSlideOverProps) {
-  const { addCustomer } = useCustomersStore();
+export default function CustomerSlideOver({ open, onClose, mode = 'add', customer }: DealSlideOverProps) {
+  const { addCustomer, updateCustomer } = useCustomersStore();
 
   const handleSubmit = async (values: any) => {
     try {
-      toast.loading("Creating customer...", { id: "create-customer" });
-      // Use the store's addCustomer method instead of direct API call
-      await addCustomer(values);
-      toast.success("Customer created successfully!", { id: "create-customer" });
+      if (mode === 'edit' && customer) {
+        toast.loading("Updating customer...", { id: "update-customer" });
+        await updateCustomer(customer.id, values);
+        toast.success("Customer updated successfully!", { id: "update-customer" });
+      } else {
+        toast.loading("Creating customer...", { id: "create-customer" });
+        await addCustomer(values);
+        toast.success("Customer created successfully!", { id: "create-customer" });
+      }
       onClose();
     } catch (error) {
-      toast.error("Failed to create customer. Please try again.", { id: "create-customer" });
-      console.error("Error creating customer:", error);
-      // Error handling is already done in the store with toast notifications
+      const errorMessage = mode === 'edit' ? "Failed to update customer. Please try again." : "Failed to create customer. Please try again.";
+      const toastId = mode === 'edit' ? "update-customer" : "create-customer";
+      toast.error(errorMessage, { id: toastId });
+      console.error(`Error ${mode === 'edit' ? 'updating' : 'creating'} customer:`, error);
     }
   }
   return (
@@ -45,7 +54,7 @@ export default function CustomerSlideOver({ open, onClose }: DealSlideOverProps)
         {/* Header */}
         <header className="flex items-center justify-between gap-4 p-4 border-b border-[var(--border-gray)]">
           <h2 id="deal-slide-title" className="text-base font-semibold leading-[28px] text-pretty">
-            Add New Customer
+            {mode === 'edit' ? 'Update Customer' : 'Add New Customer'}
           </h2>
           <button onClick={onClose} aria-label="Close">
             <X className="size-4" />
@@ -57,6 +66,8 @@ export default function CustomerSlideOver({ open, onClose }: DealSlideOverProps)
           <CustomerForm
             onCancel={onClose}
             onSubmit={(values) => handleSubmit(values)}
+            mode={mode}
+            initialData={customer}
           />
         </div>
       </aside>

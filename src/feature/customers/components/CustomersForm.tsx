@@ -13,6 +13,7 @@ import UploadButton from "@/components/ui/UploadButton"
 import InputWithDropDown from "@/components/ui/InputWithDropDown"
 import { companyOptions } from "@/feature/deals/libs/companyData"
 import { useUserStore } from "@/feature/user/store/userStore"
+import { Customer } from "../types/types"
 
 type CustomerFormValues = {
     fullName: string
@@ -41,9 +42,13 @@ const schema = Yup.object({
 export default function CustomerForm({
     onSubmit,
     onCancel,
+    mode = 'add',
+    initialData,
 }: {
     onSubmit: (values: CustomerFormValues) => void
     onCancel: () => void
+    mode?: 'add' | 'edit'
+    initialData?: Customer
 }) {
     const [tagInput, setTagInput] = useState("")
     const [uploading, setUploading] = useState(false);
@@ -57,18 +62,59 @@ export default function CustomerForm({
         }
     }, [users]);
 
-    // Create dynamic initial values based on users state
-    const getInitialValues = (): CustomerFormValues => ({
-        fullName: "",
-        company: "",
-        email: "",
-        status: "",
-        phone: "",
-        owner: users.length > 0 ? users[0].id : "",
-        tags: [],
-        notes: "",
-        files: [],
-    });
+    const getOptionLabel = (options: {id: string, label: string}[], value: string) => {
+        // First try to find by ID
+        const optionById = options.find(opt => opt.id === value);
+        if (optionById) return optionById.label;
+
+        // Then try to find by label (in case value is already a label)
+        const optionByLabel = options.find(opt => opt.label === value);
+        if (optionByLabel) return optionByLabel.label;
+
+        // If not found in options, return the value as-is (for dynamic values)
+        return value;
+    };
+
+    const getInitialValues = (): CustomerFormValues => {
+        if (mode === 'edit' && initialData) {
+            return {
+                fullName: initialData.fullName || '',
+                company: getOptionLabel(companyOptions, initialData.company),
+                email: initialData.email || '',
+                status: initialData.status || '',
+                phone: initialData.phone || '',
+                owner: getOptionLabel(userOptions, 
+                    typeof initialData.owner === 'object' && initialData.owner 
+                        ? initialData.owner.id 
+                        : initialData.ownerId || ''
+                ),
+                tags: (() => {
+                    const tags = initialData.tags;
+                    if (!tags) return [];
+                    if (Array.isArray(tags)) {
+                        return (tags as string[]).filter(Boolean);
+                    }
+                    if (typeof tags === 'string') {
+                        return (tags as string).split(',').map(tag => tag.trim()).filter(Boolean);
+                    }
+                    return [];
+                })(),
+                notes: initialData.notes || '',
+                files: initialData.files || [],
+            };
+        }
+        return {
+            fullName: "",
+            company: "",
+            email: "",
+            status: "",
+            phone: "",
+            owner: users.length > 0 ? users[0].id : "",
+            tags: [],
+            notes: "",
+            files: [],
+        };
+    };
 
     // Create user options for the dropdown
     const userOptions = users.map((user: any) => ({
@@ -96,17 +142,38 @@ export default function CustomerForm({
 
     return (
         <Formik<CustomerFormValues>
+            enableReinitialize
             initialValues={getInitialValues()}
             validationSchema={schema}
-            onSubmit={(vals, { setSubmitting, resetForm }) => {
-                const cleaned = {
-                    ...vals,
-                    tags: vals.tags ? vals.tags.map((t) => t.trim()).filter(Boolean) : [],
-                    files: uploadedFiles
+            onSubmit={async (vals, { setSubmitting, resetForm }) => {
+                try {
+                    const payload = {
+                        ...vals,
+                        tags: vals.tags ? vals.tags.map((t) => t.trim()).filter(Boolean) : [],
+                        files: uploadedFiles
+                    };
+
+                    // Run validation manually in case of async conditions
+                    await schema.validate(payload, { abortEarly: false });
+
+                    onSubmit(payload);
+
+                    // Only reset form in add mode, not in edit mode
+                    if (mode === 'add') {
+                        resetForm();
+                    }
+                } catch (error: any) {
+                    if (error.name === "ValidationError") {
+                        // Loop through validation errors
+                        error.inner.forEach((err: any) => {
+                            console.error(err.message);
+                        });
+                    } else {
+                        console.error("Failed to save customer. Please try again.");
+                    }
+                } finally {
+                    setSubmitting(false);
                 }
-                onSubmit(cleaned)
-                setSubmitting(false)
-                resetForm()
             }}
         >
             {({ isSubmitting, isValid, dirty, values, setFieldValue, resetForm }) => (
