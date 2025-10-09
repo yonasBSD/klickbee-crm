@@ -3,13 +3,14 @@ import React from 'react';
 import DetailModal from '@/components/detailPage'; // the reusable modal we built earlier
 import { DealData } from '../libs/DealsData';
 import { Badge } from '@/components/ui/Table';
+import { Deal } from '../types';
 
 interface DealDetailProps {
   isOpen: boolean;
   deal: DealData | null;
   onClose: () => void;
   onDelete?: (id: string) => void;
-  onEdit?: (id: string) => void;
+  onEdit?: (deal: Deal) => void;
   onAddNotes?: (id: string) => void;
   onExport?: (id: string) => void;
 }
@@ -59,7 +60,8 @@ export default function DealDetail({
       attachments={deal.attachments ?? []}
       onClose={onClose}
       onDelete={onDelete ? () => onDelete(deal.id) : undefined}
-      onEdit={onEdit ? () => onEdit(deal.id) : undefined}
+      onEdit={onEdit ? () => onEdit(deal as Deal) : undefined}
+      editLabel="Edit Deal"
       onAddNotes={onAddNotes ? () => onAddNotes(deal.id) : undefined}
       onExport={onExport ? () => onExport(deal.id) : undefined}
     />

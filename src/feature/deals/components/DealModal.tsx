@@ -1,26 +1,35 @@
 "use client"
 
 import { X } from "lucide-react"
-import { Button } from "@/components/ui/Button"
 import DealForm from "./DealForm"
 import { cn } from "@/libs/utils"
 import Modal from "@/components/ui/Modal"
+import { Deal } from '../types'
 import { useDealStore } from '../stores/useDealStore'
+import toast from "react-hot-toast"
 
 type DealSlideOverProps = {
   open: boolean
   onClose: () => void
+  mode?: 'add' | 'edit'
+  deal?: Deal
 }
 
-export default function DealSlideOver({ open, onClose }: DealSlideOverProps) {
+export default function DealSlideOver({ open, onClose, mode = 'add', deal }: DealSlideOverProps) {
  const addDeal = useDealStore((s) => s.addDeal);
+ const updateDeal = useDealStore((s) => s.updateDeal);
+
 
   const handleSubmit = async (values: any) => {
     try {
-      await addDeal(values); 
+      if (mode === 'edit' && deal) {
+        await updateDeal(deal.id, values);
+      } else {
+        await addDeal(values);
+      }
       onClose();
     } catch (error) {
-      console.error("Error creating deal:", error);
+      toast.error(`Error ${mode === 'edit' ? 'updating' : 'creating'} deal:`);
     }
   };
   return (
@@ -39,7 +48,7 @@ export default function DealSlideOver({ open, onClose }: DealSlideOverProps) {
         {/* Header */}
         <header className="flex items-center justify-between gap-4 p-4 border-b border-[var(--border-gray)]">
           <h2 id="deal-slide-title" className="text-base font-semibold leading-[28px] text-pretty">
-            Add New Deal
+            {mode === 'edit' ? 'Update Deal' : 'Add New Deal'}
           </h2>
           <button onClick={onClose} aria-label="Close">
             <X className="size-4" />
@@ -51,10 +60,11 @@ export default function DealSlideOver({ open, onClose }: DealSlideOverProps) {
           <DealForm
             onCancel={onClose}
             onSubmit={(values) => {
-              console.log("[v0] Deal submitted:", values)
               handleSubmit(values)
               onClose()
             }}
+            mode={mode}
+            initialData={deal}
           />
         </div>
       </aside>

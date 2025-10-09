@@ -79,6 +79,7 @@ export const useDealStore = create<DealStore>((set, get) => ({
       set({
         deals: get().deals.map((d) => (d.id === id ? updated : d)),
       });
+      toast.success("Deal Updated successfully!");
 
     } catch (err: any) {
       console.error("updateDeal error:", err);

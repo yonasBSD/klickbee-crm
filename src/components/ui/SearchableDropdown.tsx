@@ -29,20 +29,10 @@ export default function SearchableDropdown({
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // ✅ Close dropdown when clicking outside (safe version)
+  // ✅ Sync query state with value prop changes
   useEffect(() => {
-    const handleClickOutside = (event: PointerEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener("pointerdown", handleClickOutside);
-    return () => document.removeEventListener("pointerdown", handleClickOutside);
-  }, []);
+    setQuery(value || "");
+  }, [value]);
 
   const filteredOptions = options
     .filter((opt) => opt.label.toLowerCase().includes(query.toLowerCase()))

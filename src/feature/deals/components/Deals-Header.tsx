@@ -7,9 +7,7 @@ import Filter from "@/components/filter"
 import { filterData, type FilterData } from "@/feature/deals/libs/filterData"
 import DealModal from "./DealModal"
 import { useSearchParams } from "next/navigation"
-
-
-const userOptions = [{ value: "Closed", label: "Closed Time" }]
+import { Deal } from '../types'
 
 type DealsHeaderProps = {
   view: 'table' | 'grid';
@@ -22,6 +20,7 @@ export function DealsHeader({ view, setView }: DealsHeaderProps) {
   const [filters, setFilters] = useState(filterData);
   const [searchQueries, setSearchQueries] = useState<Record<string, string>>({});
   const [showNewDealer, setShowNewDealer] = useState<boolean>(false);
+  const [editDeal, setEditDeal] = useState<Deal | null>(null);
   const [closedDate, setClosedDate] = useState<Date | null>(null);
   const searchParams = useSearchParams()
 
@@ -31,6 +30,16 @@ export function DealsHeader({ view, setView }: DealsHeaderProps) {
       setShowNewDealer(true)
     }
   }, [searchParams])
+
+  const handleEditDeal = (deal: Deal) => {
+    setEditDeal(deal);
+    setShowNewDealer(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowNewDealer(false);
+    setEditDeal(null);
+  };
 
   // ✅ Toggle checkbox
   const handleToggle = (category: keyof FilterData, id: string) => {
@@ -132,7 +141,7 @@ export function DealsHeader({ view, setView }: DealsHeaderProps) {
          <span className="text-[#FAFAFA]"> New Deal</span> 
         </Button>
       </div>
-      <DealModal open={showNewDealer} onClose={() => setShowNewDealer(false)} />
+      <DealModal open={showNewDealer} onClose={handleCloseModal} mode={editDeal ? 'edit' : 'add'} deal={editDeal || undefined} />
       {showFilter && <Filter filters={filters} handleToggle={handleToggle} showFilter={showFilter} setShowFilter={() => setShowFilter((prev: boolean) => !prev)} searchableCategories={searchableCategories} setSearchQueries={setSearchQueries} searchQueries={searchQueries} classes="w-[300px] bg-white" />}
     </div>
   )

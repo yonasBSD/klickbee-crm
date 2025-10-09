@@ -38,7 +38,6 @@ const formatDate = (dateString?: string) => {
 };
 
 export function DealCard({ deal, className }: DealCardProps) {
-  console.log(deal.stage, 'deal stage', stageBadgeClass[deal.stage]);
   const badgeClass = stageBadgeClass[deal.stage] ?? "bg-muted text-muted-foreground"
 
   return (

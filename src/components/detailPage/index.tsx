@@ -24,6 +24,7 @@ interface DetailModalProps {
   onReschedule?: () => void;
   onAddNotes?: () => void;
   onExport?: () => void;
+  editLabel?: string;
 }
 
 const DetailModal: React.FC<DetailModalProps> = ({
@@ -40,6 +41,7 @@ const DetailModal: React.FC<DetailModalProps> = ({
   onReschedule,
   onAddNotes,
   onExport,
+  editLabel,
 }) => {
   if (!isOpen) return null;
 
@@ -175,8 +177,7 @@ const DetailModal: React.FC<DetailModalProps> = ({
                   className="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 whitespace-nowrap"
                 >
                   <Edit size={15}/>
-                  Edit Deal
-                </Button>
+                  {editLabel || "Edit Deal"}                </Button>
               )}
               {onReschedule && (
                 <Button

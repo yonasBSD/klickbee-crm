@@ -14,6 +14,7 @@ import { options } from '../libs/currencyOptions'
 import { useUserStore } from '@/feature/user/store/userStore';
 import InputWithDropDown from "@/components/ui/InputWithDropDown"
 import toast from "react-hot-toast"
+import { Deal } from '../types'
 
 type DealFormValues = {
   dealName: string
@@ -63,9 +64,13 @@ const initialValues: DealFormValues = {
 export default function DealForm({
     onSubmit,
     onCancel,
+    mode = 'add',
+    initialData,
 }: {
     onSubmit: (values: DealFormValues) => void
     onCancel: () => void
+    mode?: 'add' | 'edit'
+    initialData?: Deal
 }) {
     const [tagInput, setTagInput] = useState("")
     const [uploading, setUploading] = useState(false);
@@ -74,18 +79,18 @@ export default function DealForm({
     // Fetch users for owner dropdown
     const { users, loading: usersLoading, fetchUsers } = useUserStore();
 
-useEffect(() => {
-  if (users.length === 0) {
-    fetchUsers();
-  }
-}, [users]);
+    useEffect(() => {
+        if (users.length === 0) {
+            fetchUsers();
+        }
+    }, [users]);
 
 
     // Create user options for the dropdown
     const userOptions = users.map((user: any) => ({
         id: user.id,
         value: user.id,
-        label: user.name || user.email 
+        label: user.name || user.email
     }));
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -105,9 +110,54 @@ useEffect(() => {
         }
     };
 
+
+    // Helper function to convert option IDs to labels
+    const getOptionLabel = (options: {id: string, label: string}[], value: string) => {
+        // First try to find by ID
+        const optionById = options.find(opt => opt.id === value);
+        if (optionById) return optionById.label;
+
+        // Then try to find by label (in case value is already a label)
+        const optionByLabel = options.find(opt => opt.label === value);
+        if (optionByLabel) return optionByLabel.label;
+
+        // If not found in options, return the value as-is (for dynamic values)
+        return value;
+    };
+
+    // Get initial values based on mode and initial data
+    const getInitialValues = (): DealFormValues => {
+        if (mode === 'edit' && initialData) {
+            const initialVals = {
+                dealName: initialData.dealName || '',
+                company: getOptionLabel(companyOptions, initialData.company),
+                contact: getOptionLabel(contactOptions, initialData.contact),
+                stage: initialData.stage || 'New',
+                amount: initialData.amount || 0,
+                currency: 'EUR', // Default currency, you might want to store this in the deal data
+                owner: getOptionLabel(userOptions, initialData.owner),
+                closeDate: initialData.closeDate
+                    ? new Date(initialData.closeDate).toISOString().split('T')[0]
+                    : '',
+                tags: initialData.tags 
+                    ? (typeof initialData.tags === 'string' 
+                        ? initialData.tags.split(',').map(tag => tag.trim()).filter(Boolean)
+                        : Array.isArray(initialData.tags) 
+                            ? (initialData.tags as string[]).filter(Boolean)
+                            : [])
+                    : [],
+                notes: initialData.notes || '',
+                files: [], // Files are not pre-populated in edit mode for now
+            };
+            return initialVals;
+        }
+        return initialValues;
+    };
+
     return (
         <Formik<DealFormValues>
-            initialValues={initialValues}
+            enableReinitialize
+            initialValues={getInitialValues()}
             validationSchema={schema}
             onSubmit={async (vals, { setSubmitting, resetForm }) => {
                 try {
@@ -122,8 +172,10 @@ useEffect(() => {
 
                     onSubmit(payload);
 
-
-                    resetForm();
+                    // Only reset form in add mode, not in edit mode
+                    if (mode === 'add') {
+                        resetForm();
+                    }
                 } catch (error: any) {
                     if (error.name === "ValidationError") {
                         // Loop through validation errors
@@ -139,7 +191,7 @@ useEffect(() => {
             }}
 
         >
-            {({ isSubmitting, isValid, dirty, values, setFieldValue, resetForm }) => (
+            {({ values, setFieldValue, resetForm }) => (
                 <Form className="flex min-h-full flex-col gap-4">
                     {/* Fields container */}
                     <div className="px-4 py-4 flex flex-col gap-4 ">
@@ -247,7 +299,7 @@ useEffect(() => {
                             Cancel
                         </Button>
                         <Button type="submit" className="flex-1 bg-black text-white" >
-                            Save Deal
+                            {mode === 'edit' ? 'Update Deal' : 'Save Deal'}
                         </Button>
                     </div>
                 </Form>
@@ -275,4 +327,3 @@ function FieldBlock({
         </div>
     )
 }
-

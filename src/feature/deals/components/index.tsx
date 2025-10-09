@@ -8,7 +8,7 @@ import { useDealStore } from '../stores/useDealStore'
 import GridView from './DealsGridView'
 import DealDetail from './DealDetail'
 import { Deal } from '../types';
-import { useUserStore } from '@/feature/user/store/userStore';
+import DealModal from "./DealModal"
 
 const columns: TableColumn<Deal>[] = [
   { key: 'dealName', title: 'Deal Name', dataIndex: 'dealName', sortable: true },
@@ -36,6 +36,8 @@ const Deals = () => {
   const [view, setView] = React.useState<'table' | 'grid'>('table');
   const [selectedDeal, setSelectedDeal] = React.useState<DealData | null>(null)
   const [isDetailOpen, setIsDetailOpen] = React.useState(false)
+  const [showModal, setShowModal] = React.useState<boolean>(false);
+  const [editDeal, setEditDeal] = React.useState<Deal | null>(null);
 
     const { deals, fetchDeals, loading ,deleteDeal } = useDealStore();
 
@@ -47,6 +49,12 @@ const Deals = () => {
     setSelectedDeal(deal)
     setIsDetailOpen(true)
   }
+  const handleEditDeal = (deal: Deal) => {
+    setEditDeal(deal);
+    setShowModal(true);
+    setIsDetailOpen(false);
+  };
+
   const closeDetail = () => {
     setIsDetailOpen(false)
     setSelectedDeal(null)
@@ -72,7 +80,7 @@ const Deals = () => {
           await deleteDeal(id)
           closeDetail()
         }}
-              onEdit={() => {}}
+              onEdit={handleEditDeal}
               onAddNotes={() => {}}
               onExport={() => {}}
             />
@@ -81,6 +89,7 @@ const Deals = () => {
           <GridView  />
         )}
       </div>
+      <DealModal open={showModal} onClose={() => setShowModal(false)} mode={editDeal ? 'edit' : 'add'} deal={editDeal || undefined} />
     </div>
 
   );

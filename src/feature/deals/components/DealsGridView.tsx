@@ -1,10 +1,10 @@
-'use client'
 import GridView from "@/components/ui/GridView"
 import { DealCard } from "./DealCard"
 import { type DealData as Deal } from "../libs/DealsData"
 import * as React from "react"
 import { Plus } from "lucide-react"
 import DealDetail from "./DealDetail"
+import DealModal from './DealModal'
 import { useDealStore } from '../stores/useDealStore'
 import { useEffect } from 'react';
 import toast from "react-hot-toast"
@@ -13,6 +13,8 @@ import toast from "react-hot-toast"
 export default function DealsGridView() {
   const [selectedDeal, setSelectedDeal] = React.useState<Deal | null>(null)
   const [isDetailOpen, setIsDetailOpen] = React.useState(false)
+  const [showModal, setShowModal] = React.useState<boolean>(false);
+  const [editDeal, setEditDeal] = React.useState<Deal | null>(null);
   const { deals, fetchDeals, loading,  deleteDeal ,updateDeal } = useDealStore();
 
 useEffect(() => {
@@ -67,6 +69,12 @@ const handleMove = React.useCallback(async  ({ itemId, fromKey, toKey }: { itemI
   const closeDetail = () => {
     setIsDetailOpen(false)
     setSelectedDeal(null)
+  }
+  const handleEditDeal = (deal: Deal) => {
+    setEditDeal(deal);
+    setShowModal(true);
+    setIsDetailOpen(false);
+
   }
 
   return (
@@ -139,13 +147,18 @@ const handleMove = React.useCallback(async  ({ itemId, fromKey, toKey }: { itemI
           await deleteDeal(id)
           closeDetail()
         }}
-        onEdit={(id) => {
+        onEdit={(deal: Deal) => handleEditDeal(deal)}
+        onAddNotes={() => {
+        
+          toast("Add notes functionality coming soon!");
         }}
-        onAddNotes={(id) => {
-        }}
-        onExport={(id) => {
+        onExport={() => {
+          
+          toast("Export functionality coming soon!");
         }}
       />
+
+      <DealModal open={showModal} onClose={() => setShowModal(false)} mode={editDeal ? 'edit' : 'add'} deal={editDeal || undefined} />
     </main>
   )
 }
