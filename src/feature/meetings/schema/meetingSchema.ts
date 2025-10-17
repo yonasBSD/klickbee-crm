@@ -26,6 +26,8 @@ export const createMeetingSchema = z
     notes: z.string().optional().or(z.literal("")),
     files: z.any().optional(),
     ownerId: z.string(),
+    linkedId: z.string().optional().or(z.literal("")),
+    link: z.string().optional(),
   })
   .transform((data) => ({
     ...data,
@@ -49,9 +51,9 @@ export const updateMeetingSchema = z
     repeatOn: z.string().optional(),
     repeatEvery: z.coerce.number().int().min(0).optional(),
     ends: z.enum(endsValues).optional(),
-    linkedTo: z.string().trim().optional(),
+    linkedId: z.string().trim().optional(),
     location: z.string().optional(),
-    assignedTo: z.string().optional(),
+    assignedId: z.string().optional(),
     participants: z.array(z.string().trim().min(1)).optional(),
     status: z.enum(statusValues).optional(),
     tags: z.array(z.string().trim().min(1)).optional(),
