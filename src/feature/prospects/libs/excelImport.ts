@@ -46,7 +46,7 @@ export const importProspectsFromExcel = async (file: File): Promise<{
     
     // Get headers and normalize them
     const headers = jsonData[0] as string[];
-    const normalizedHeaders = headers.map(h => h?.toString().toLowerCase().trim());
+    const normalizedHeaders = headers.map(h => h?.toString().toLowerCase().trim() || '');
     
     // Define expected column mappings (flexible to handle different header names)
     const columnMappings: Record<string, keyof Prospect> = {

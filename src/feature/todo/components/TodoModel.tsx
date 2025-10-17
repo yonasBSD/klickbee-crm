@@ -9,6 +9,7 @@ import { TaskData } from "../types/types"
 import toast from "react-hot-toast"
 import { useEffect } from "react"
 import { useUserStore } from "@/feature/user/store/userStore"
+import { useCompaniesStore } from "@/feature/companies/stores/useCompaniesStore"
 
 type TodoSlideOverProps = {
   open: boolean
@@ -29,23 +30,32 @@ export default function TodoSlideOver({ open, onClose, mode = 'add', task }: Tod
     }
   }, [users]);
 
+
   const userOptions = users.map((user: any) => ({
     id: user.id,
     value: user.id,
     label: user.name || user.email
   }));
 
+
+
   const handleSubmit = async (values: any) => {
     try {
       if (mode === 'edit' && task) {
         await updateTodo(task.id, values);
       } else {
-         const selectedOwner = userOptions.find(user => user.id === values.owner);
-        const payload = {...values,
-          owner: selectedOwner
-          ? { id: selectedOwner.id as string, name: selectedOwner.label as string }
-          : { id: '', name: '' },
-        }
+         const selectedAssignedTo = userOptions.find(user => user.id === values.assignedId);
+         const selectedLinkedTo = userOptions.find(user => user.id === values.linkedTo);
+
+        const payload = {
+          ...values,
+          assignedId: selectedAssignedTo ? selectedAssignedTo.id : '',
+          linkedId: selectedLinkedTo ? selectedLinkedTo.id : '',
+          // Remove the object versions to avoid confusion
+          assignedTo: undefined,
+          linkedTo: undefined
+        };
+
         await addTodo(payload);
       }
       onClose();

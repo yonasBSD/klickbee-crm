@@ -42,6 +42,10 @@ export async function POST(req: Request) {
         ownerId: data.ownerId,
         userId: data.userId,
       },
+      include: {
+        owner: true,
+        company: true,
+      },
     });
 
     return NextResponse.json(created, { status: 201 });
@@ -119,6 +123,10 @@ export async function handleMethodWithId(req: Request, id: string) {
           status: data.status,
           tags: data.tags ?? undefined,
           notes: data.notes ?? undefined,
+        },
+        include: {
+          owner: true,
+          company: true,
         },
       });
 

@@ -38,13 +38,23 @@ export default function ProspectSlideOver({ open, onClose , mode = 'add', prospe
  const handleSubmit = async (values: any) => {
     try {
       if (mode === 'edit' && prospect) {
-        await updateProspect(prospect.id, values);
+        const payload = {
+          ...values,
+          // Map company and contact IDs to the expected field names for edit mode too
+          companyId: values.company || null,
+          // Remove the original company and contact fields to avoid conflicts
+          company: undefined,
+
+        }
+        await updateProspect(prospect.id, payload);
       } else {
         const selectedOwner = userOptions.find(user => user.id === values.owner);
         const payload = {...values,
           owner: selectedOwner
           ? { id: selectedOwner.id as string, name: selectedOwner.label as string }
           : { id: '', name: '' },
+          companyId: values.company || null,
+          company: undefined,
         }
         await addProspect(payload);
       }

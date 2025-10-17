@@ -4,7 +4,7 @@ export type Deal = {
   dealName: string
   company: string
   contact: string
-  stage: 'New' | 'Contacted' | 'Proposal' | 'Won' | 'Lost'
+  stage: 'New' | 'Contacted' | 'Proposal' | 'Negotiation' | 'Won' | 'Lost'
   amount: number
   ownerImage?: string
   activity?: string

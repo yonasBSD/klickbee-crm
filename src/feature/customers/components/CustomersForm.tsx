@@ -11,8 +11,8 @@ import SearchableDropdown from "@/components/ui/SearchableDropdown"
 import TagInput from "@/components/ui/TagInput"
 import UploadButton from "@/components/ui/UploadButton"
 import InputWithDropDown from "@/components/ui/InputWithDropDown"
-import { companyOptions } from "@/feature/deals/libs/companyData"
-import { useUserStore } from "@/feature/user/store/userStore"
+import { useCompaniesStore } from "@/feature/companies/stores/useCompaniesStore"
+import { getCompanyOptions } from "@/feature/deals/libs/companyData"
 import { Customer } from "../types/types"
 
 type CustomerFormValues = {
@@ -58,6 +58,11 @@ export default function CustomerForm({
     const [uploading, setUploading] = useState(false);
     const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
 
+    // Fetch companies for company dropdown
+    useEffect(() => {
+        useCompaniesStore.getState().fetchCompanies();
+    }, []);
+
     const getOptionLabel = (options: {id: string, label: string}[], value: string) => {
         // First try to find by ID
         const optionById = options.find(opt => opt.id === value);
@@ -73,15 +78,42 @@ export default function CustomerForm({
 
     const getInitialValues = (): CustomerFormValues => {
         if (mode === 'edit' && initialData) {
+            const { companies } = useCompaniesStore.getState();
+
+            // Handle company field - could be ID, name, or object
+            let companyValue = '';
+            if (initialData.company) {
+                if (typeof initialData.company === 'string') {
+                    // First check if it's already a company ID
+                    const companyById = companies.find(c => c.id === initialData.company);
+                    if (companyById) {
+                        companyValue = companyById.id;
+                    } else {
+                        // If not an ID, check if it's a company name
+                        const companyByName = companies.find(c =>
+                            c.fullName?.toLowerCase() === initialData.company?.toLowerCase()
+                        );
+                        if (companyByName) {
+                            companyValue = companyByName.id;
+                        } else {
+                            // If no match found, leave empty (user can select again)
+                            companyValue = '';
+                        }
+                    }
+                } else if (typeof initialData.company === 'object' && initialData.company && 'id' in initialData.company) {
+                    companyValue = (initialData.company as { id: string }).id;
+                }
+            }
+
             return {
                 fullName: initialData.fullName || '',
-                company: getOptionLabel(companyOptions, initialData.company),
+                company: companyValue,
                 email: initialData.email || '',
                 status: initialData.status || '',
                 phone: initialData.phone || '',
-                owner: getOptionLabel(userOptions, 
-                    typeof initialData.owner === 'object' && initialData.owner 
-                        ? initialData.owner.id 
+                owner: getOptionLabel(userOptions,
+                    typeof initialData.owner === 'object' && initialData.owner
+                        ? initialData.owner.id
                         : initialData.ownerId || ''
                 ),
                 tags: (() => {
@@ -96,7 +128,7 @@ export default function CustomerForm({
                     return [];
                 })(),
                 notes: initialData.notes || '',
-                files: initialData.files || [],
+                files: [],
             };
         }
         return {
@@ -182,7 +214,7 @@ export default function CustomerForm({
                             <SearchableDropdown
                                 name="company"
                                 value={values.company}
-                                options={companyOptions}
+                                options={getCompanyOptions()}
                                 onChange={(val) => setFieldValue("company", val)}
                                 placeholder="Search or create a company"
                             />

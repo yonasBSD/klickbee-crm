@@ -23,7 +23,7 @@ interface TodoStore {
   resetFilters: () => void;
   generateOwnerOptions: () => FilterOption[];
   initializeOwnerOptions: () => void;
-  addTodo: (todo: Omit<TaskData, "id" | "ownerId" | "createdAt" | "updatedAt">) => Promise<void>;
+  addTodo: (todo: Omit<TaskData, "id" | "ownerId" | "createdAt" | "updatedAt"> & { assignedId?: string; linkedId?: string }) => Promise<void>;
   updateTodo: (id: string, todo: Partial<TaskData>) => Promise<void>;
   deleteTodo: (id: string) => Promise<void>;
   bulkDeleteTodos: (ids: string[]) => Promise<void>;
@@ -155,10 +155,10 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
       }
 
       const created: TaskData = await res.json();
-      set({ todos: [ ...get().todos, { ...created, linkedTo: todo.linkedTo? {
-                  id: todo.linkedTo.id as string,
-                  name: todo.linkedTo.name,
-                  email: (todo.linkedTo as any).email || "",
+      set({ todos: [ ...get().todos, { ...created, linkedTo: todo.linkedId? {
+                  id: todo.linkedId as string,
+                  name: '', // Will be populated from the API response
+                  email: "",
                 }
               : undefined,
           },

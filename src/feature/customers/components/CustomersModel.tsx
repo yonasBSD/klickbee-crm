@@ -39,7 +39,14 @@ export default function CustomerSlideOver({ open, onClose, mode = 'add', custome
     try {
       if (mode === 'edit' && customer) {
         toast.loading("Updating customer...", { id: "update-customer" });
-        await updateCustomer(customer.id, values);
+        const payload = {
+          ...values,
+          // Map company ID to the expected field name for edit mode
+          companyId: values.company || null,
+          // Remove the original company field to avoid conflicts
+          company: undefined,
+        }
+        await updateCustomer(customer.id, payload);
         toast.success("Customer updated successfully!", { id: "update-customer" });
       } else {
         toast.loading("Creating customer...", { id: "create-customer" });
@@ -48,6 +55,10 @@ export default function CustomerSlideOver({ open, onClose, mode = 'add', custome
           owner: selectedOwner
           ? { id: selectedOwner.id as string, name: selectedOwner.label as string }
           : { id: '', name: '' },
+          // Map company ID to the expected field name
+          companyId: values.company || null,
+          // Remove the original company field to avoid conflicts
+          company: undefined,
         }
         await addCustomer(payload);
         toast.success("Customer created successfully!", { id: "create-customer" });

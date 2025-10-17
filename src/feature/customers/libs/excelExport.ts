@@ -183,7 +183,7 @@ export const exportCustomersWithColumns = (
  */
 export const exportSingleCustomerToExcel = (customer: Customer, filename?: string) => {
   // Clean customer name for filename (remove special characters, replace spaces with hyphens)
-  const cleanName = customer.fullName.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '-').toLowerCase();
+  const cleanName = (customer.fullName || 'customer').replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '-').toLowerCase();
   const defaultFilename = `${cleanName}-customer.xlsx`;
   return exportCustomersToExcel([customer], filename || defaultFilename);
 };

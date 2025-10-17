@@ -39,13 +39,29 @@ export default function DealSlideOver({ open, onClose, mode = 'add', deal }: Dea
   const handleSubmit = async (values: any) => {
     try {
       if (mode === 'edit' && deal) {
-        await updateDeal(deal.id, values);
+        const payload = {
+          ...values,
+          // Map company and contact IDs to the expected field names for edit mode too
+          companyId: values.company || null,
+          contactId: values.contact || null,
+          // Remove the original company and contact fields to avoid conflicts
+          company: undefined,
+          contact: undefined,
+        }
+        await updateDeal(deal.id, payload);
       } else {
           const selectedOwner = userOptions.find(user => user.id === values.owner);
-        const payload = {...values,
+        const payload = {
+          ...values,
           owner: selectedOwner
           ? { id: selectedOwner.id as string, name: selectedOwner.label as string }
           : { id: '', name: '' },
+          // Map company and contact IDs to the expected field names
+          companyId: values.company || null,
+          contactId: values.contact || null,
+          // Remove the original company and contact fields to avoid conflicts
+          company: undefined,
+          contact: undefined,
         }
         await addDeal(payload);
       }

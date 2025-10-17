@@ -55,7 +55,7 @@ export default function CustomerDetail({
         </span>
       ),
     },
-    { label: "Company Name", value: customer.company ?? "-" },
+    { label: "Company Name", value: customer.company && typeof customer.company === 'object' && 'fullName' in customer.company ? (customer.company as any).fullName ?? "-" : customer.company ?? "-" },
     { label: "Email", value: customer.email ?? "-" },
     { label: "Phone", value: customer.phone ?? "-" },
     customer.tags && customer.tags.length > 0 && { label: "Tags", value: customer.tags.join(', ') },
@@ -67,6 +67,7 @@ export default function CustomerDetail({
       title={customer.fullName ?? "Customer Details"}
       notes={customer.notes ??undefined}
       details={details}
+      attachments={customer.files?.map(file => file.url) ?? []}
       onClose={onClose}
       onDelete={onDelete ? () => onDelete(customer.id) : undefined}
       onEdit={onEdit ? () => onEdit(customer as Customer) : undefined}

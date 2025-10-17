@@ -18,12 +18,12 @@ export const prospectsColumns: TableColumn<Prospect>[] = [
     dataIndex: 'fullName',
     sortable: true,
   },
-  {
-    key: 'company',
-    title: 'Company',
-    dataIndex: 'company',
-    sortable: false,
-  },
+    { key: 'company', title: 'Company', dataIndex: 'company', sortable: false, render: (company) => {
+      if (!company) return '-';
+      if (typeof company === 'string') return company;
+      if (typeof company === 'object' && company?.fullName) return company.fullName;
+      return 'Unknown Company';
+    } },
   {
     key: 'email',
     title: 'Email',
@@ -36,12 +36,12 @@ export const prospectsColumns: TableColumn<Prospect>[] = [
     dataIndex: 'phone',
     sortable: false,
   },
-  {
-    key: 'owner',
-    title: 'Owner',
-    dataIndex: 'owner',
-    avatar: { srcIndex: 'ownerAvatar', altIndex: 'owner', size: 32 },
-  },
+     { key: 'owner', title: 'Owner', dataIndex: 'owner', sortable: false, render: (owner, record) => {
+      if (!owner) return 'Unassigned';
+      if (typeof owner === 'string') return owner;
+      if (typeof owner === 'object' && owner?.name) return owner.name;
+      return 'Unknown';
+    }, avatar: { srcIndex: 'ownerImage', altIndex: 'owner', size: 32 } },
   {
     key: 'status',
     title: 'Status',
@@ -97,9 +97,12 @@ export default function Prospects () {
     const [editProspect, setEditProspect] = useState<Prospect | null>(null);
   const [selectedProspects, setSelectedProspects] = React.useState<string[]>([])
   const [selectedProspectRows, setSelectedProspectRows] = React.useState<Prospect[]>([])
-  
+  const [isDeleting, setIsDeleting] = React.useState(false);
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [isExporting, setIsExporting] = React.useState(false);
 
-  const { filteredProspects, fetchProspects, loading, deleteProspect, exportSingleProspect, initializeOwnerOptions } = useProspectsStore();
+
+  const { filteredProspects, fetchProspects, loading, isDeleting: storeDeleting, isEditing: storeEditing, isExporting: storeExporting, deleteProspect, exportSingleProspect, initializeOwnerOptions } = useProspectsStore();
   const { fetchUsers, users } = useUserStore();
 
   // Load users once on mount
@@ -161,8 +164,13 @@ export default function Prospects () {
                prospect={selected}
                onClose={closeDetail}
                onDelete={async (id: string) => {
-                 await deleteProspect(id);
-                 closeDetail();
+                 setIsDeleting(true);
+                 try {
+                   await deleteProspect(id);
+                   closeDetail();
+                 } finally {
+                   setIsDeleting(false);
+                 }
                }}
                onEdit={handleEditDeal}
                onAddNotes={(id: string) => {
@@ -170,8 +178,16 @@ export default function Prospects () {
                  console.log('Add notes for prospect:', id);
                }}
                onExport={(id: string) => {
-                 exportSingleProspect(id);
+                 setIsExporting(true);
+                 try {
+                   exportSingleProspect(id);
+                 } finally {
+                   setIsExporting(false);
+                 }
                }}
+               isDeleting={isDeleting || storeDeleting}
+               isEditing={isEditing || storeEditing}
+               isExporting={isExporting || storeExporting}
              />
              <ProspectModel
               open={showModal} onClose={() => setShowModal(false)} mode={editProspect ? 'edit' : 'add'} prospect={editProspect || undefined}/>

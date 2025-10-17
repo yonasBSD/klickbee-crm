@@ -7,11 +7,10 @@ import { Formik, Form, Field, ErrorMessage } from "formik"
 import * as Yup from "yup"
 import { Button } from "@/components/ui/Button"
 import SearchableDropdown from "@/components/ui/SearchableDropdown"
-import TagInput from "@/components/ui/TagInput"
-import { companyOptions } from "@/feature/deals/libs/companyData"
-import { useUserStore } from "@/feature/user/store/userStore"
+import { useCompaniesStore } from "@/feature/companies/stores/useCompaniesStore"
 import { Prospect } from "../types/types"
-
+import { getCompanyOptions } from "../libs/companyData"
+import TagInput from "@/components/ui/TagInput"
 type ProspectFormValues = {
     fullName: string
     company: string
@@ -61,7 +60,10 @@ export default function ProspectForm({
   userOptions: { id: string; value: string; label: string }[]
 }) {
     const [tagInput, setTagInput] = useState("")
-    // Fetch users for owner dropdow
+    // Fetch companies for company dropdown
+    useEffect(() => {
+        useCompaniesStore.getState().fetchCompanies();
+    }, []);
        const getOptionLabel = (options: {id: string, label: string}[], value: string) => {
         // First try to find by ID
         const optionById = options.find(opt => opt.id === value);
@@ -75,35 +77,62 @@ export default function ProspectForm({
         return value;
     };
     const getInitialValues = (): ProspectFormValues => {
-        if (mode === 'edit' && initialData) {
-            const initialVals = {
-                fullName: initialData.fullName || '',
-                company: getOptionLabel(companyOptions, initialData.company),
-                email: initialData.email || '',
-                status: initialData.status || '',
-                phone: initialData.phone || '',
-                owner: getOptionLabel(userOptions, 
-                    typeof initialData.owner === 'object' && initialData.owner 
-                        ? initialData.owner.id 
-                        : initialData.owner || ''
-                ),
-                tags: (() => {
-                    const tags = initialData.tags;
-                    if (!tags) return [];
-                    if (Array.isArray(tags)) {
-                        return (tags as string[]).filter(Boolean);
-                    }
-                    if (typeof tags === 'string') {
-                        return (tags as string).split(',').map(tag => tag.trim()).filter(Boolean);
-                    }
-                    return [];
-                })(),
-                notes: initialData.notes || '',
-            };
-            return initialVals;
+    if (mode === 'edit' && initialData) {
+      const { companies } = useCompaniesStore.getState();
+
+      // Handle company field - could be ID, name, or object
+      let companyValue = '';
+      if (initialData.company) {
+        if (typeof initialData.company === 'string') {
+          // First check if it's already a company ID
+          const companyById = companies.find(c => c.id === initialData.company);
+          if (companyById) {
+            companyValue = companyById.id;
+          } else {
+            // If not an ID, check if it's a company name
+            const companyByName = companies.find(c =>
+              c.fullName?.toLowerCase() === initialData.company?.toLowerCase()
+            );
+            if (companyByName) {
+              companyValue = companyByName.id;
+            } else {
+              // If no match found, leave empty (user can select again)
+              companyValue = '';
+            }
+          }
+        } else if (typeof initialData.company === 'object' && initialData.company && 'id' in initialData.company) {
+          companyValue = (initialData.company as { id: string }).id;
         }
-        return initialValues;
-    };
+      }
+
+      const initialVals = {
+        fullName: initialData.fullName || '',
+        company: companyValue,
+        email: initialData.email || '',
+        status: initialData.status || '',
+        phone: initialData.phone || '',
+        owner: getOptionLabel(userOptions,
+          typeof initialData.owner === 'object' && initialData.owner
+            ? initialData.owner.id
+            : initialData.owner || ''
+        ),
+        tags: (() => {
+          const tags = initialData.tags;
+          if (!tags) return [];
+          if (Array.isArray(tags)) {
+            return (tags as string[]).filter(Boolean);
+          }
+          if (typeof tags === 'string') {
+            return (tags as string).split(',').map(tag => tag.trim()).filter(Boolean);
+          }
+          return [];
+        })(),
+        notes: initialData.notes || '',
+      };
+      return initialVals;
+    }
+    return initialValues;
+  };
 
     
 
@@ -160,7 +189,7 @@ export default function ProspectForm({
                             <SearchableDropdown
                                 name="company"
                                 value={values.company}
-                                options={companyOptions}
+                                options={getCompanyOptions()}
                                 onChange={(val) => setFieldValue("company", val)}
                                 placeholder="Search or create a company"
                             />

@@ -32,13 +32,17 @@ export default function SearchableDropdown({
     return option ? option.label : val;
   };
 
-  const [query, setQuery] = useState(getDisplayLabel(value) || "");
+  const [query, setQuery] = useState(() => {
+    const displayLabel = getDisplayLabel(value);
+    return typeof displayLabel === 'string' ? displayLabel : "";
+  });
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // ✅ Sync query state with value prop changes
   useEffect(() => {
-    setQuery(getDisplayLabel(value) || "");
+    const displayLabel = getDisplayLabel(value);
+    setQuery(typeof displayLabel === 'string' ? displayLabel : "");
   }, [value, options]);
 
   const filteredOptions = options
@@ -62,6 +66,12 @@ export default function SearchableDropdown({
             onChange(e.target.value);
           }}
           onFocus={() => setIsOpen(true)}
+        onBlur={(e) => {
+  if (!dropdownRef.current?.contains(e.relatedTarget)) {
+    setIsOpen(false);
+  }
+}}
+
           className={`w-full rounded-md text-sm border border-[var(--border-gray)] shadow-sm bg-background ${
             showIcon ? "pl-10" : "pl-3"
           } pr-3 py-2 outline-none focus:ring-1 focus:ring-gray-400`}
@@ -75,11 +85,12 @@ export default function SearchableDropdown({
               <div
                 key={option.id}
                 className="px-3 py-2 cursor-pointer text-sm hover:bg-gray-100"
-                onClick={() => {
-                  onChange(option.value); // Use option.value (ID) instead of option.label
-                  setQuery(option.label); // Display the label
-                  setIsOpen(false);
-                }}
+              onMouseDown={() => {
+            // ✅ onMouseDown fires before onBlur, so selection works properly
+            onChange(option.value);
+            setQuery(option.label);
+            setIsOpen(false);
+          }}
               >
                 {option.label}
               </div>

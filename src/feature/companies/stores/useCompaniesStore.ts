@@ -93,7 +93,7 @@ export const useCompaniesStore = create<CompanyStore>((set, get) => ({
       filtered = filtered.filter((company: Company) =>
         activeStatusFilters.some((filter: any) => {
           if (filter.id === "active") return company.status === "Active";
-          if (filter.id === "follow-up") return company.status === "Follow Up";
+          if (filter.id === "follow-up") return company.status === "FollowUp";
           if (filter.id === "inactive") return company.status === "inactive";
           return false;
         })
@@ -118,8 +118,8 @@ export const useCompaniesStore = create<CompanyStore>((set, get) => ({
     const activeTagFilters = filters.tags.filter((t: any) => t.checked && t.id !== "all");
     if (activeTagFilters.length > 0) {
       filtered = filtered.filter((company: Company) =>
-        company.tags && activeTagFilters.some((filter: any) =>
-          company.tags?.toLowerCase().includes(filter.label.toLowerCase())
+        company.tags && typeof company.tags === 'string' && activeTagFilters.some((filter: any) =>
+          company.tags!.toLowerCase().includes(filter.label.toLowerCase())
         )
       );
     }

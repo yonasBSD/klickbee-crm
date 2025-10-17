@@ -31,6 +31,10 @@ export const MeetingsCalendar: React.FC = () => {
     closeMeetingDetail,
     openAddMeeting,
     closeAddMeeting,
+    loading,
+    isDeleting,
+    isEditing,
+    isExporting,
   } = useMeetings();
   const searchParams = useSearchParams();
   
@@ -217,7 +221,18 @@ const getHeaderDate = () => {
           // TODO: Implement reschedule functionality
           console.log('Reschedule meeting:', id);
         }}
-        onDelete={deleteMeeting}
+       onDelete={async (id) => {
+                    
+                    try {
+                      await deleteMeeting(id);
+                      closeMeetingDetail();
+                    } catch (error) {
+                      console.error('Error deleting meeting:', error);
+                    } 
+                  }}
+        isDeleting={isDeleting}
+        isEditing={isEditing}
+        isExporting={isExporting}
       />
     </div>
   );

@@ -11,11 +11,12 @@ import { useUserStore } from "@/feature/user/store/userStore"
 import SearchableDropdown from "@/components/ui/SearchableDropdown"
 import toast from "react-hot-toast"
 import { TaskData } from "../types/types"
+import CalendarDropDown from "@/components/ui/CalendarDropDown"
 
 type TodoFormValues = {
     taskName: string
     linkedTo: string
-    assignedTo: string
+    assignedId: string
     status: string
     priority: string
     dueDate: string
@@ -39,7 +40,7 @@ const schema = Yup.object({
 const initialValues: TodoFormValues = {
     taskName: "",
     linkedTo: "",
-    assignedTo: "",
+    assignedId: "",
     status: "",
     priority: "",
     dueDate: "",
@@ -94,10 +95,18 @@ export default function TodoForm({
                 taskName: initialData.taskName || '',
                 linkedTo: typeof initialData.linkedTo === 'string'
                     ? initialData.linkedTo
-                    : (initialData.linkedTo as { name: string })?.name || '',
-                assignedTo: typeof initialData.assignedTo === 'string'
+                    : (initialData.linkedTo as { id: string })?.id || '',
+                assignedId: typeof initialData.assignedTo === 'string'
                     ? initialData.assignedTo
-                    : (initialData.assignedTo as { name: string })?.name || '',
+                    : (() => {
+                        // Find user by name from userOptions
+                        const assignedToObj = initialData.assignedTo as { name: string; assignedImage?: string } | undefined;
+                        if (assignedToObj?.name) {
+                            const userOption = userOptions.find(option => option.label === assignedToObj.name);
+                            return userOption ? userOption.value : '';
+                        }
+                        return '';
+                    })(),
                 status: initialData.status === 'Todo' ? 'to-do'
                     : initialData.status === 'InProgress' ? 'in-progress'
                     : initialData.status === 'OnHold' ? 'on-hold'
@@ -164,7 +173,7 @@ export default function TodoForm({
                                             form.setFieldValue("linkedTo", val);
                                             form.setFieldTouched("linkedTo", true);
                                         }}
-                                        placeholder="Select User"
+                                        placeholder="Select Linked TO"
                                         showIcon={false}
                                         maxOptions={20}
                                     />
@@ -172,16 +181,16 @@ export default function TodoForm({
                             </Field>
                         </FieldBlock>
 
-                        <FieldBlock name="assignedTo" label="Assigned To">
-                            <Field name="assignedTo">
+                        <FieldBlock name="assignedId" label="Assigned To">
+                            <Field name="assignedId">
                                 {({ field, form }: any) => (
                                     <SearchableDropdown
-                                        name="assignedTo"
+                                        name="assignedId"
                                         value={field.value || ""}
                                         options={userOptions}
                                         onChange={(val) => {
-                                            form.setFieldValue("assignedTo", val);
-                                            form.setFieldTouched("assignedTo", true);
+                                            form.setFieldValue("assignedId", val);
+                                            form.setFieldTouched("assignedId", true);
                                         }}
                                         placeholder="Select User"
                                         showIcon={false}
@@ -224,11 +233,19 @@ export default function TodoForm({
                         </div>
 
                         <FieldBlock name="dueDate" label="Due Date">
-                            <Field
-                                id="dueDate"
-                                name="dueDate"
-                                type="date"
-                                className="w-full rounded-md text-sm shadow-sm border  border-[var(--border-gray)] bg-background px-3 py-2 outline-none focus:ring-1 focus:ring-gray-400 focus:outline-none"
+        
+                        
+                     <CalendarDropDown
+                                label={values.dueDate ? new Date(values.dueDate).toLocaleDateString('en-US', {
+                                    month: 'long',
+                                    day: 'numeric',
+                                    year: 'numeric'
+                                }) : "Select due Date"}
+                                value={values.dueDate ? new Date(values.dueDate) : null}
+                                buttonClassName="min-w-[360px] bg-blue-50 hover:bg-blue-100"
+                                onChange={(date) => setFieldValue("dueDate", date.toISOString().split('T')[0])}
+                                          triggerIcon="calendar"
+
                             />
                         </FieldBlock>
                         <FieldBlock name="notes" label="Notes">

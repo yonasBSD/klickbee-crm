@@ -20,12 +20,19 @@ const stageBadgeClass: Record<string, string> = {
   lost: "bg-destructive/10 text-destructive",
 }
 
-const currency = (v: number) =>
-  new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: "EUR",
-    maximumFractionDigits: 0,
-  }).format(v)
+const getCurrencySymbol = (currency?: string) => {
+  switch (currency?.toUpperCase()) {
+    case 'EUR': return '€';
+    case 'GBP': return '£';
+    case 'USD':
+    default: return '$';
+  }
+};
+
+const formatCurrency = (amount: number, currency?: string) => {
+  const symbol = getCurrencySymbol(currency);
+  return `${symbol}${amount.toLocaleString()}`;
+};
 
 const formatDate = (dateString?: string) => {
   if (!dateString) return '';
@@ -35,6 +42,13 @@ const formatDate = (dateString?: string) => {
     month: 'long',
     year: 'numeric'
   });
+};
+
+const getContactName = (contact: any) => {
+  if (!contact) return 'No Contact';
+  if (typeof contact === 'string') return contact;
+  if (typeof contact === 'object' && contact?.fullName) return contact.fullName;
+  return 'Unknown Contact';
 };
 
 export function DealCard({ deal, className }: DealCardProps) {
@@ -55,7 +69,7 @@ export function DealCard({ deal, className }: DealCardProps) {
 
         {/* Amount + contact */}
         <p className="mt-1 text-xs text-[var(--brand-gray)] ">
-          {currency(deal.amount)} <span className=""> - {deal.contact}</span>
+          {formatCurrency(deal.amount, (deal as any).currency)} <span className=""> - {getContactName(deal.contact)}</span>
         </p>
 
         {/* Date / tags / activity */}
@@ -92,6 +106,8 @@ function labelForStage(stage: Deal["stage"]) {
       return "Contacted"
     case "Proposal":
       return "Proposal Sent"
+    case "Negotiation":
+      return "Negotiation"
     case "Won":
       return "Won"
     case "Lost":

@@ -10,6 +10,7 @@ import UploadButton from "@/components/ui/UploadButton";
 import { Button } from "@/components/ui/Button";
 import { Meeting } from "../types/meeting";
 import SearchableDropdown from "@/components/ui/SearchableDropdown";
+import CalendarDropDown from "@/components/ui/CalendarDropDown";
 
 // ✅ Enhanced Yup validation with comprehensive rules
 const MeetingSchema = Yup.object().shape({
@@ -156,7 +157,7 @@ const initialValues = {
   meetingLink: "",
   assignedTo: "",
   participants: [],
-  status: "scheduled",
+  status: "",
   tags: [],
   notes: "",
   files: [],
@@ -181,19 +182,31 @@ export default function MeetingForm({ onSubmit, onClose, mode = 'add', initialDa
       return {
         title: initialData.title || '',
         startDate: initialData.startDate ? new Date(initialData.startDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-        startTime: initialData.startTime ? new Date(initialData.startTime).toTimeString().slice(0, 5) : '09:00',
-        endTime: initialData.endTime ? new Date(initialData.endTime).toTimeString().slice(0, 5) : '10:00',
+        startTime: initialData.startTime ? (() => {
+          const date = new Date(initialData.startTime);
+          // Use noon time to avoid timezone shifts and format as HH:MM
+          const hours = date.getHours().toString().padStart(2, '0');
+          const minutes = date.getMinutes().toString().padStart(2, '0');
+          return `${hours}:${minutes}`;
+        })() : '09:00',
+        endTime: initialData.endTime ? (() => {
+          const date = new Date(initialData.endTime);
+          // Use noon time to avoid timezone shifts and format as HH:MM
+          const hours = date.getHours().toString().padStart(2, '0');
+          const minutes = date.getMinutes().toString().padStart(2, '0');
+          return `${hours}:${minutes}`;
+        })() : '10:00',
         repeatMeeting: initialData.repeatMeeting || false,
         frequency: initialData.frequency || 'Daily',
         repeatOn: initialData.repeatOn || '',
         repeatEvery: initialData.repeatEvery || 1,
         ends: initialData.ends || 'Never',
-        linkedTo: initialData.linkedTo || '',
+        linkedTo: typeof initialData.linkedTo === 'string' ? initialData.linkedTo : (initialData.linkedTo as { id: string })?.id || '',
         location: initialData.location || '',
         meetingLink: initialData.meetingLink || '',
-        assignedTo: initialData.assignedTo || '',
+        assignedTo: typeof initialData.assignedTo === 'string' ? initialData.assignedTo : (initialData.assignedTo as { id: string })?.id || '',
         participants: initialData.participants || [],
-        status: initialData.status || 'scheduled',
+        status: initialData.status || '',
         tags: initialData.tags || [],
         notes: initialData.notes || '',
         files: initialData.files || [],
@@ -240,16 +253,25 @@ export default function MeetingForm({ onSubmit, onClose, mode = 'add', initialDa
           // Prepare payload with proper ISO datetime strings
           const currentDate = vals.startDate ? new Date(vals.startDate) : new Date();
           const dateStr = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD
-          
-          // Create proper ISO datetime strings
-          const startTimeISO = vals.startTime ? `${dateStr}T${vals.startTime}:00.000Z` : null;
-          const endTimeISO = vals.endTime ? `${dateStr}T${vals.endTime}:00.000Z` : null;
-          
+
           const payload = {
             ...vals,
-            startDate: currentDate.toISOString(), // Full ISO datetime for startDate
-            startTime: startTimeISO,              // Full ISO datetime for startTime
-            endTime: endTimeISO,                  // Full ISO datetime for endTime
+            // Ensure dates are properly formatted as ISO datetime strings
+            startDate: vals.startTime ? (() => {
+              const [hours, minutes] = vals.startTime.split(':').map(Number);
+              const dateWithTime = new Date(vals.startDate + `T${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00.000`);
+              return dateWithTime.toISOString();
+            })() : null,
+            startTime: vals.startTime ? (() => {
+              const [hours, minutes] = vals.startTime.split(':').map(Number);
+              const dateWithTime = new Date(vals.startDate + `T${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00.000`);
+              return dateWithTime.toISOString();
+            })() : null,
+            endTime: vals.endTime ? (() => {
+              const [hours, minutes] = vals.endTime.split(':').map(Number);
+              const dateWithTime = new Date(vals.startDate + `T${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00.000`);
+              return dateWithTime.toISOString();
+            })() : null,
             tags: vals.tags ? vals.tags.map((t: string) => t.trim()).filter(Boolean) : [],
             participants: vals.participants ? vals.participants.map((p: string) => p.trim()).filter(Boolean) : [],
             files: uploadedFiles
@@ -287,13 +309,34 @@ export default function MeetingForm({ onSubmit, onClose, mode = 'add', initialDa
 
           {/* Date & Time */}
           <div className="grid grid-cols-3 gap-4 p-4">
-            <TextInput label="Date" type="date" name="startDate" />
+              <div>
+             <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-1">
+                Date
+              </label>
+              <CalendarDropDown
+             
+              label="Select Date"
+              value={values.startDate ? (() => {
+                // Ensure proper date parsing for the CalendarDropDown
+                const dateStr = values.startDate;
+                if (typeof dateStr === 'string' && dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                  return new Date(dateStr + 'T12:00:00.000Z'); // Add noon time to avoid timezone issues
+                }
+                return new Date(dateStr);
+              })() : null}
+                buttonClassName=" h-10 mt-1 w-30 text-sm whitespace-nowrap"
+          triggerIcon="calendar"
+
+              onChange={(date) => setFieldValue("startDate", date.toISOString().split('T')[0])}
+          />
+          </div>
             <TextInput label="Start Time" type="time" name="startTime" />
             <TextInput label="End Time" type="time" name="endTime" />
           </div>
 
           {/* Repeat Meeting */}
           <div className="p-4">
+
             <CheckboxInput name="repeatMeeting" label="Repeat this meeting" />
             {values.repeatMeeting && (
               <div>
@@ -346,16 +389,31 @@ export default function MeetingForm({ onSubmit, onClose, mode = 'add', initialDa
             <TextInput label="Location" name="location" placeholder="Conference Room A, Office, etc." />
 
             {/* Link Location */}
-            <TextInput label="Link Location" name="meetingLink" placeholder="Zoom / Meet link" />
+            {/* <TextInput label="Link Location" name="meetingLink" placeholder="Zoom / Meet link" /> */}
 
             {/* Assigned To */}
-            <TextInput label="Assigned To" name="assignedTo" placeholder="Team member" />
+            <div>
+            <label htmlFor="assignedTo" className="block text-sm font-medium text-gray-700 mb-1">
+                Assigned To
+              </label>
+              <SearchableDropdown
+                name="assignedTo"
+                value={values.assignedTo}
+                options={userOptions}
+                placeholder="Select assignedTo"
+                showIcon={false}
+                maxOptions={20}
+                onChange={(value) => setFieldValue('assignedTo', value)}
+              />
+            </div>
 
             {/* Participants */}
             <TagInput name='Participants' values={values.participants} setValue={(values: string[]) => setFieldValue('participants', values)} input={participantsInput} setInput={(value: string) => setParticipantsInput(value)} />
 
             {/* Status */}
             <SelectInput label="Status" name="status">
+              <option value="" disabled>Select Status</option>
+
               <option value="scheduled">Scheduled</option>
               <option value="confirmed">Confirmed</option>
               <option value="cancelled">Cancelled</option>
@@ -374,8 +432,8 @@ export default function MeetingForm({ onSubmit, onClose, mode = 'add', initialDa
           {/* Actions */}
           <div className="flex items-center justify-center gap-4 p-4 border-t border-[var(--border-gray)]">
             <Button type="button" className=" w-full">Cancel</Button>
-            <Button type="submit" className=" w-full bg-black text-white">
-              Save Task
+            <Button type="submit" className=" w-full bg-black text-white " >
+              Save Meeting
             </Button>
           </div>
         </Form>

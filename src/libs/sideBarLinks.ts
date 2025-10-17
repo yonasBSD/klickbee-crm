@@ -4,46 +4,54 @@ export interface SidebarLink {
   route?: string;
   children?: SidebarLink[];
   lucideIcon?: "home" | "settings";
+  prefetch?: boolean;
 }
 
 export const sidebarItems: SidebarLink[] = [
   {
     label: "Dashboard",
     lucideIcon: "home",
-    route: "/"
+    route: "/",
+    prefetch: true
   },
   {
     label: "Deals",
     icon: "/sideBarIcons/handshake.svg",
-    route: "/deals"
+    route: "/deals",
+    prefetch: true
   },
   {
     label: "To-Do",
     icon: "/sideBarIcons/layout-list.svg",
-   route: "/todo" 
-    },
+    route: "/todo",
+    prefetch: true
+  },
   { 
     label: "Meetings", 
     icon: "/sideBarIcons/presentation.svg", 
-    route: "/meetings"
-   },
+    route: "/meetings",
+    prefetch: true
+  },
   { 
     label: "Prospects", 
     icon: "/sideBarIcons/trending-up.svg",
-    route: "/prospects"
-   },
+    route: "/prospects",
+    prefetch: true
+  },
   {
     label: "Contact",
     icon: "/sideBarIcons/mail.svg",
     children: [
       {
         label: "Customers",
-        route: "/contact/customers"
-       },
+        route: "/contact/customers",
+        prefetch: true
+      },
       { 
         label: "Companies", 
-        route: "/contact/companies"
-       },
+        route: "/contact/companies",
+        prefetch: true
+      },
     ],
   },
   {
@@ -66,15 +74,18 @@ export const sidebarItems: SidebarLink[] = [
     children: [
       {
         label: "AI",
-        route: "/settings/ai"
+        route: "/settings/ai",
+        prefetch: true
       },
       {
         label: "Users",
-        route: "/settings/users"
+        route: "/settings/users",
+        prefetch: true
       },
       {
         label: "Email",
-        route: "/settings/email"
+        route: "/settings/email",
+        prefetch: true
       },
     ],
   },

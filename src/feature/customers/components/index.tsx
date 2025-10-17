@@ -20,6 +20,12 @@ export const customerColumns: TableColumn<Customer>[] = [
     title: 'Company Name',
     dataIndex: 'company',
     sortable: false,
+    render: (company) => {
+      if (!company) return '-';
+      if (typeof company === 'string') return company;
+      if (typeof company === 'object' && company?.fullName) return company.fullName;
+      return 'Unknown Company';
+    }
   },
   {
     key: 'email',
@@ -38,7 +44,12 @@ export const customerColumns: TableColumn<Customer>[] = [
     title: 'Owner',
     dataIndex: 'owner',
     avatar: { srcIndex: 'ownerAvatar', altIndex: 'owner', size: 32 },
-    render: (owner: Customer['owner']) => owner?.name || owner?.email || 'Unknown',
+    render: (owner) => {
+      if (!owner) return 'Unassigned';
+      if (typeof owner === 'string') return owner;
+      if (typeof owner === 'object' && owner?.name) return owner.name;
+      return 'Unknown';
+    },
   },
   {
     key: 'status',
@@ -163,7 +174,8 @@ export default function Customers () {
                   customer={selected}
                   onClose={closeDetail}
                   onDelete={async (id: string) => {
-                    closeDetail();
+                    deleteCustomer(id);
+                    closeDetail()
                   }}
                   onEdit={(customer: Customer) => {
                     handleEditCustomer(customer);

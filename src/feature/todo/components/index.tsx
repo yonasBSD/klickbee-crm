@@ -25,8 +25,10 @@ const taskColumns: TableColumn<TaskData>[] = [
     dataIndex: 'linkedTo',
     sortable: false,
     render: (linkedTo) => {
+      if (!linkedTo) return '-';
+      const displayName = typeof linkedTo === 'object' ? linkedTo.name || linkedTo.email : linkedTo;
       return (
-        <div>{linkedTo?.name}</div>
+        <div>{displayName || 'Unknown'}</div>
       )
     }
   },
@@ -37,8 +39,11 @@ const taskColumns: TableColumn<TaskData>[] = [
     sortable: false,
     avatar: { srcIndex: 'assignedImage', altIndex: 'assignedTo', size: 32 },
     render: (assignedTo) => {
+      if (!assignedTo) return '-';
+      // Handle both object and string cases
+      const displayName = typeof assignedTo === 'object' ? assignedTo.name : assignedTo;
       return (
-        <div>{assignedTo?.name}</div>
+        <div>{displayName || 'Unknown'}</div>
       )
     }
   },
@@ -99,7 +104,7 @@ const taskColumns: TableColumn<TaskData>[] = [
     key: 'dueDate',
     title: 'Due Date',
     dataIndex: 'dueDate',
-    sortable: true,
+    sortable: false,
     render: (dateString) => {
       if (!dateString) return '-';
       const date = new Date(dateString);
@@ -150,6 +155,9 @@ export default function TODO() {
   const [editTask, setEditTask] = React.useState<TaskData | null>(null);
   const [selectedTodos, setSelectedTodos] = React.useState<string[]>([])
   const [selectedTodoRows, setSelectedTodoRows] = React.useState<TaskData[]>([])
+  const [isDeleting, setIsDeleting] = React.useState(false);
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [isExporting, setIsExporting] = React.useState(false);
   // Selectors to avoid re-renders from full-store subscription and keep function refs stable
   const filteredTodos = useTodoStore((s) => s.filteredTodos);
   const loading = useTodoStore((s) => s.loading);
@@ -195,7 +203,7 @@ export default function TODO() {
 
 
   return (
-    <div className='overflow-x-hidden'>
+    <div className=''>
       <TodoHeader 
         view={view} 
         setView={(view: 'table' | 'grid') => setView(view)}
@@ -205,6 +213,12 @@ export default function TODO() {
           setSelectedTodos([]);
           setSelectedTodoRows([]);
         }}
+        isDeleting={isDeleting}
+        isEditing={isEditing}
+        isExporting={isExporting}
+        setIsDeleting={setIsDeleting}
+        setIsEditing={setIsEditing}
+        setIsExporting={setIsExporting}
       />
       <div className='py-8 px-6 overflow-x-hidden'>
         {view === 'table' ? (
@@ -226,12 +240,20 @@ export default function TODO() {
                     task={selectedTask}
                     onClose={closeDetail}
                     onDelete={async (id) => {
-                      await deleteTodo(id)
-                      closeDetail()
+                      setIsDeleting(true);
+                      try {
+                        await deleteTodo(id)
+                        closeDetail()
+                      } finally {
+                        setIsDeleting(false);
+                      }
                     }}
                     onEdit={handleEditTask}
                     onAddNotes={() => { }}
                     onExport={() => { }}
+                    isDeleting={isDeleting}
+                    isEditing={isEditing}
+                    isExporting={isExporting}
                   />
                 )}
               </>

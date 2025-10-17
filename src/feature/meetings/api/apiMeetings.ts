@@ -67,6 +67,11 @@ export async function POST(req: Request) {
         notes: data.notes ?? null,
         files: data.files ?? undefined,
       },
+       include: {
+    owner: true,
+    linkedTo: true,
+    assignedTo: true, 
+  },
     });
 
     return NextResponse.json(created, { status: 201 });
@@ -155,6 +160,11 @@ export async function handleMethodWithId(req: Request, id: string) {
           notes: data.notes ?? undefined,
           files: data.files ?? undefined,
         },
+   include: {
+    owner: true,
+    linkedTo: true,
+    assignedTo: true, 
+  },
       });
 
       return NextResponse.json(updated);
