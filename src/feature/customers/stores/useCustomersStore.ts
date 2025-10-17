@@ -69,7 +69,7 @@ export const useCustomersStore = create<CustomerStore>((set, get) => ({
     }));
     return [
       { id: "all", label: "All Owner", checked: true },
-      { id: "me", label: "Me", checked: false },
+      // { id: "me", label: "Me", checked: false },
       ...userOptions,
     ];
   },

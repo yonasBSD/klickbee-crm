@@ -62,7 +62,7 @@ export const useCompaniesStore = create<CompanyStore>((set, get) => ({
     }));
     return [
       { id: "all", label: "All Owner", checked: true },
-      { id: "me", label: "Me", checked: false },
+      // { id: "me", label: "Me", checked: false },
       ...userOptions,
     ];
   },
