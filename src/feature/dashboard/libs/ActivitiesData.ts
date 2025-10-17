@@ -40,7 +40,7 @@ const mapActivitiesToInterface = (activities: any[]): Activity[] => {
         action,
         description,
         time,
-        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(user)}&background=random&size=32` // Placeholder avatar
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.charAt(0))}&background=000000&color=ffffff`
       };
     });
 }

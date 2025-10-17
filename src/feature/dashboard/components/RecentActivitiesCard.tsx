@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react"
 import { fetchRecentActivities } from "../libs/ActivitiesData"
 import { Activity } from "../types/Types"
+import Loading from "@/components/ui/Loading"
 
 export default function RecentActivitiesCard() {
   const [activities, setActivities] = useState<Activity[]>([])
@@ -37,8 +38,12 @@ export default function RecentActivitiesCard() {
           <h3 className="text-base font-semibold">Recent Activities</h3>
         </div>
         <div className="flex-1 flex items-center justify-center">
-          <p className="text-gray-500">Loading activities...</p>
-        </div>
+ <Loading
+            variant="default"
+            size="md"
+            label="Loading activities..."
+            className=""
+          />        </div>
       </section>
     )
   }
