@@ -4,6 +4,8 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/feature/auth/lib/auth";
 import { prisma } from "@/libs/prisma";
 import { createTodoSchema, updateTodoSchema } from "../schema/todoSchema";
+import { ActivityAction } from "@prisma/client";
+import { withActivityLogging } from "@/libs/apiUtils";
 
 export async function POST(req: Request) {
   try {
@@ -40,7 +42,6 @@ export async function POST(req: Request) {
         notes: data.notes ?? null,
         files: data.files ?? undefined,
       },
-      include:{linkedTo: true, assignedTo: true},
     });
 
     return NextResponse.json(created, { status: 201 });
@@ -66,7 +67,7 @@ export async function GET(req: Request) {
     };
     const todos = await prisma.todo.findMany({
       where,
-      include:{linkedTo: true, assignedTo: true},
+      include:{linkedTo: true, assignedTo: true, owner: true},
       orderBy: { createdAt: "desc" },
       take: Math.min(limit, 200),
     });
@@ -122,7 +123,6 @@ export async function handleMethodWithId(req: Request, id: string) {
           notes: data.notes ?? undefined,
           files: data.files ?? undefined,
         },
-        include: { linkedTo: true, assignedTo: true },
       });
 
       return NextResponse.json(updated);
@@ -133,7 +133,29 @@ export async function handleMethodWithId(req: Request, id: string) {
       if (!session?.user?.id)
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-      await prisma.todo.delete({ where: { id } });
+      const getPreviousData = async () => {
+        return await prisma.todo.findUnique({
+          where: { id },
+        });
+      };
+            
+      const deletedTodo = await withActivityLogging(
+        async () => {
+          return await prisma.todo.delete({
+            where: { id },
+          });
+        },
+        {
+          entityType: 'Todo',
+          entityId: id,
+          action: ActivityAction.Delete,
+          userId: session.user.id,
+          getPreviousData,
+          metadata: {
+            deletedAt: new Date().toISOString(),
+          },
+        }
+      );
       return NextResponse.json({ success: true });
     }
 

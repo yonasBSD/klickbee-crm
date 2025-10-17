@@ -4,6 +4,8 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/feature/auth/lib/auth";
 import { prisma } from "@/libs/prisma";
 import { createProspectSchema, updateProspectSchema } from "../schema/prospectSchema";
+import { withActivityLogging } from "@/libs/apiUtils";
+import { ActivityAction } from "@prisma/client";
 
 export async function POST(req: Request) {
   try {
@@ -27,26 +29,42 @@ export async function POST(req: Request) {
       );
     }
 
-    const data = parsed.data as any;
-    console.log({data})
+    const parsedData = parsed.data as any;
+    const data = {
+      fullName: parsedData.fullName,
+      companyId: parsedData.companyId || null,
+      email: parsedData.email || null,
+      phone: parsedData.phone || null,
+      status: parsedData.status,
+      tags: parsedData.tags ?? [],
+      notes: parsedData.notes || null,
+      ownerId: parsedData.ownerId,
+      userId: parsedData.userId,
+    }
 
-    const created = await prisma.prospect.create({
-      data: {
-        fullName: data.fullName,
-        companyId: data.companyId || null,
-        email: data.email || null,
-        phone: data.phone || null,
-        status: data.status,
-        tags: data.tags ?? [],
-        notes: data.notes || null,
-        ownerId: data.ownerId,
-        userId: data.userId,
+    const created = await withActivityLogging(
+      async () => {
+        return await prisma.prospect.create({
+          data,
+          include: {
+            owner: true,
+            company: true,
+          },
+        });
       },
-      include: {
-        owner: true,
-        company: true,
-      },
-    });
+      {
+        entityType: 'Prospect',
+        entityId: '',
+        action: ActivityAction.Create,
+        userId: session.user.id,
+        getCurrentData: async (result: any) => {
+          return result;
+        },
+        metadata: {
+          createdFields: Object.keys(data),
+        },
+      }
+    );
 
     return NextResponse.json(created, { status: 201 });
   } catch (err) {
@@ -111,26 +129,51 @@ export async function handleMethodWithId(req: Request, id: string) {
         );
       }
 
-      const data = parsed.data as any;
-
-      const updated = await prisma.prospect.update({
-        where: { id },
-        data: {
-          fullName: data.fullName,
-          companyId: data.companyId ?? null,
-          email: data.email ?? undefined,
-          phone: data.phone ?? undefined,
-          status: data.status,
-          tags: data.tags ?? undefined,
-          notes: data.notes ?? undefined,
+      const parsedData = parsed.data as any;
+      const data = {
+        fullName: parsedData.fullName,
+        companyId: parsedData.companyId ?? null,
+        email: parsedData.email ?? undefined,
+        phone: parsedData.phone ?? undefined,
+        status: parsedData.status,
+        tags: parsedData.tags ?? undefined,
+        notes: parsedData.notes ?? undefined,
+      };
+      
+      const getPreviousData = async () => {
+        const prospect = await prisma.prospect.findUnique({
+          where: { id: id },
+        });
+        return prospect;
+      };
+      console.log(await getPreviousData())
+      const updatedProspect = await withActivityLogging(
+        async () => {
+          return await prisma.prospect.update({
+            where: { id: id },
+            data,
+            include: {
+              owner: true,
+              company: true,
+            },
+          });
         },
-        include: {
-          owner: true,
-          company: true,
-        },
-      });
+        {
+          entityType: 'Prospect',
+          entityId: id,
+          action: ActivityAction.Update,
+          userId: session.user.id,
+          getPreviousData,
+          getCurrentData: async (result: any) => {
+            return result;
+          },
+          metadata: {
+            updatedFields: Object.keys(data),
+          },
+        }
+      );
 
-      return NextResponse.json(updated);
+      return NextResponse.json(updatedProspect);
     }
 
     if (method === "DELETE") {
@@ -139,7 +182,29 @@ export async function handleMethodWithId(req: Request, id: string) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
 
-      await prisma.prospect.delete({ where: { id } });
+      const getPreviousData = async () => {
+        return await prisma.prospect.findUnique({
+          where: { id },
+        });
+      };
+            
+      const deletedProspect = await withActivityLogging(
+        async () => {
+          return await prisma.prospect.delete({
+            where: { id },
+          });
+        },
+        {
+          entityType: 'Prospect',
+          entityId: id,
+          action: ActivityAction.Delete,
+          userId: session.user.id,
+          getPreviousData,
+          metadata: {
+            deletedAt: new Date().toISOString(),
+          },
+        }
+      );
       return NextResponse.json({ success: true });
     }
 

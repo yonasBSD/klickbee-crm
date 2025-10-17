@@ -4,6 +4,8 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/feature/auth/lib/auth";
 import { prisma } from "@/libs/prisma";
 import { createCompanySchema, updateCompanySchema } from "../schema/companySchema";
+import { withActivityLogging } from "@/libs/apiUtils";
+import { ActivityAction } from "@prisma/client";
 
 export async function POST(req: Request) {
   try {
@@ -27,24 +29,44 @@ export async function POST(req: Request) {
       );
     }
 
-    const data = parsed.data as any;
+    const parsedData = parsed.data as any;
+    const data = {
+        fullName: parsedData.fullName,
+        industry: parsedData.industry,
+        email: parsedData.email || null,
+        phone: parsedData.phone || null,
+        website: parsedData.website || null,
+        status: parsedData.status,
+        tags: parsedData.tags ?? [],
+        assing: parsedData.assing ?? [],
+        notes: parsedData.notes || null,
+        files: parsedData.files ?? undefined,
+        ownerId: parsedData.ownerId,
+        userId: parsedData.userId,
+      }
 
-    const created = await prisma.company.create({
-      data: {
-        fullName: data.fullName,
-        industry: data.industry,
-        email: data.email || null,
-        phone: data.phone || null,
-        website: data.website || null,
-        status: data.status,
-        tags: data.tags ?? [],
-        assing: data.assing ?? [],
-        notes: data.notes || null,
-        files: data.files ?? undefined,
-        ownerId: data.ownerId,
-        userId: data.userId,
+    const created = await withActivityLogging(
+      async () => {
+        return await prisma.company.create({
+          data,
+          include: {
+            owner: true
+          },
+        });
       },
-    });
+      {
+        entityType: 'Company',
+        entityId: '',
+        action: ActivityAction.Create,
+        userId: session.user.id,
+        getCurrentData: async (result: any) => {
+          return result;
+        },
+        metadata: {
+          createdFields: Object.keys(data),
+        },
+      }
+    );
 
     return NextResponse.json(created, { status: 201 });
   } catch (err) {
@@ -108,25 +130,51 @@ export async function handleMethodWithId(req: Request, id: string) {
         );
       }
 
-      const data = parsed.data as any;
+      const parsedData = parsed.data as any;
 
-      const updated = await prisma.company.update({
-        where: { id },
-        data: {
-          fullName: data.fullName,
-          industry: data.industry,
-          email: data.email ?? undefined,
-          phone: data.phone ?? undefined,
-          website: data.website ?? undefined,
-          status: data.status,
-          tags: data.tags ?? undefined,
-          assing: data.assing ?? undefined,
-          notes: data.notes ?? undefined,
-          files: data.files ?? undefined,
+      const data = {
+          fullName: parsedData.fullName,
+          industry: parsedData.industry,
+          email: parsedData.email ?? undefined,
+          phone: parsedData.phone ?? undefined,
+          website: parsedData.website ?? undefined,
+          status: parsedData.status,
+          tags: parsedData.tags ?? undefined,
+          assing: parsedData.assing ?? undefined,
+          notes: parsedData.notes ?? undefined,
+          files: parsedData.files ?? undefined,
+        };
+
+        const getPreviousData = async () => {
+          const company = await prisma.company.findUnique({
+            where: { id: id },
+          });
+          return company;
+        };
+      console.log(await getPreviousData())
+      const updatedCompany = await withActivityLogging(
+        async () => {
+          return await prisma.company.update({
+            where: { id: id },
+            data,
+          });
         },
-      });
+        {
+          entityType: 'Company',
+          entityId: id,
+          action: ActivityAction.Update,
+          userId: session.user.id,
+          getPreviousData,
+          getCurrentData: async (result: any) => {
+            return result;
+          },
+          metadata: {
+            updatedFields: Object.keys(data),
+          },
+        }
+      );
 
-      return NextResponse.json(updated);
+      return NextResponse.json(updatedCompany);
     }
 
     if (method === "DELETE") {
@@ -135,7 +183,29 @@ export async function handleMethodWithId(req: Request, id: string) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
 
-      await prisma.company.delete({ where: { id } });
+      const getPreviousData = async () => {
+        return await prisma.company.findUnique({
+          where: { id },
+        });
+      };
+      
+      const deletedCompany = await withActivityLogging(
+        async () => {
+          return await prisma.company.delete({
+            where: { id },
+          });
+        },
+        {
+          entityType: 'Company',
+          entityId: id,
+          action: ActivityAction.Delete,
+          userId: session.user.id,
+          getPreviousData,
+          metadata: {
+            deletedAt: new Date().toISOString(),
+          },
+        }
+      );
       return NextResponse.json({ success: true });
     }
 

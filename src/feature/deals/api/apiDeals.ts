@@ -154,11 +154,11 @@ export async function handleMethodWithId(req: Request, id: string) {
         }
 
       const getPreviousData = async () => {
-            const deal = await prisma.deal.findUnique({
-              where: { id: id },
-            });
-            return deal;
-          };
+        const deal = await prisma.deal.findUnique({
+          where: { id: id },
+        });
+        return deal;
+      };
       console.log(await getPreviousData())
       const updatedDeal = await withActivityLogging(
         async () => {
@@ -196,10 +196,10 @@ export async function handleMethodWithId(req: Request, id: string) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
       const getPreviousData = async () => {
-            return await prisma.deal.findUnique({
-              where: { id },
-            });
-          };
+        return await prisma.deal.findUnique({
+          where: { id },
+        });
+      };
       
       const deletedDeal = await withActivityLogging(
         async () => {

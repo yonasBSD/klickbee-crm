@@ -4,6 +4,8 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/feature/auth/lib/auth";
 import { prisma } from "@/libs/prisma";
 import { createMeetingSchema, updateMeetingSchema } from "../schema/meetingSchema";
+import { withActivityLogging } from "@/libs/apiUtils";
+import { ActivityAction } from "@prisma/client";
 
 function toDate(val: any): Date | null | undefined {
   if (val === undefined) return undefined;
@@ -33,8 +35,8 @@ export async function POST(req: Request) {
       startTime: toDate(bodyRaw.startTime),
       endTime: toDate(bodyRaw.endTime),
       ownerId: session.user.id,
-      linkedId: bodyRaw.linkedTo, // Always link meetings to the user who created them
-      assignedTo: bodyRaw.assignedTo && bodyRaw.assignedTo.trim() !== "" ? bodyRaw.assignedTo : null, // Pass through assignedTo, null if empty
+      linkedId: bodyRaw.linkedTo, 
+      assignedTo: bodyRaw.assignedTo && bodyRaw.assignedTo.trim() !== "" ? bodyRaw.assignedTo : null,
     });
     if (!parsed.success) {
       return NextResponse.json(
@@ -43,36 +45,52 @@ export async function POST(req: Request) {
       );
     }
 
-    const data = parsed.data as any;
-    console.log({date: data.startDate, isodate: toDate(data.startDate)})
+    const parsedData = parsed.data as any;
+    const data = {
+      title: parsedData.title,
+      startDate: parsedData.startDate,
+      startTime: parsedData.startTime,
+      endTime: parsedData.endTime,
+      ownerId: parsedData.ownerId,
+      repeatMeeting: parsedData.repeatMeeting ?? false,
+      frequency: parsedData.frequency,
+      repeatOn: parsedData.repeatOn ?? null,
+      repeatEvery: typeof parsedData.repeatEvery === "number" ? parsedData.repeatEvery : 0,
+      ends: parsedData.ends,
+      linkedId: parsedData.linkedId || session.user.id,
+      location: parsedData.location ?? null,
+      assignedId: parsedData.assignedTo|| session.user.id,
+      participants: parsedData.participants ?? [],
+      status: parsedData.status,
+      tags: parsedData.tags ?? [],
+      notes: parsedData.notes ?? null,
+      files: parsedData.files ?? undefined,
+    };
 
-    const created = await prisma.meeting.create({
-      data: {
-        title: data.title,
-        startDate: data.startDate,
-        startTime: data.startTime,
-        endTime: data.endTime,
-        ownerId: data.ownerId,
-        repeatMeeting: data.repeatMeeting ?? false,
-        frequency: data.frequency,
-        repeatOn: data.repeatOn ?? null,
-        repeatEvery: typeof data.repeatEvery === "number" ? data.repeatEvery : 0,
-        ends: data.ends,
-        linkedId: data.linkedId || session.user.id,
-        location: data.location ?? null,
-        assignedId: data.assignedTo|| session.user.id,
-        participants: data.participants ?? [],
-        status: data.status,
-        tags: data.tags ?? [],
-        notes: data.notes ?? null,
-        files: data.files ?? undefined,
+    const created = await withActivityLogging(
+      async () => {
+        return await prisma.meeting.create({
+          data,
+          include: {
+            owner: true,
+            linkedTo: true,
+            assignedTo: true
+          },
+        });
       },
-       include: {
-    owner: true,
-    linkedTo: true,
-    assignedTo: true, 
-  },
-    });
+      {
+        entityType: 'Meeting',
+        entityId: '',
+        action: ActivityAction.Create,
+        userId: session.user.id,
+        getCurrentData: async (result: any) => {
+          return result;
+        },
+        metadata: {
+          createdFields: Object.keys(data),
+        },
+      }
+    );
 
     return NextResponse.json(created, { status: 201 });
   } catch (err) {
@@ -137,37 +155,63 @@ export async function handleMethodWithId(req: Request, id: string) {
         );
       }
 
-      const data = parsed.data as any;
+      const parsedData = parsed.data as any;
+      const data = {
+          title: parsedData.title,
+          startDate: toDate(parsedData.startDate),
+          startTime: toDate(parsedData.startTime),
+          endTime: toDate(parsedData.endTime),
+          repeatMeeting: parsedData.repeatMeeting,
+          frequency: parsedData.frequency,
+          repeatOn: parsedData.repeatOn ?? undefined,
+          repeatEvery: parsedData.repeatEvery,
+          ends: parsedData.ends,
+          linkedId: parsedData.linkedTo || session.user.id,
+          location: parsedData.location ?? undefined,
+          assignedId: parsedData.assignedTo && parsedData.assignedTo.trim() !== "" ? parsedData.assignedTo : null,
+          participants: parsedData.participants ?? undefined,
+          status: parsedData.status,
+          tags: parsedData.tags ?? undefined,
+          notes: parsedData.notes ?? undefined,
+          files: parsedData.files ?? undefined,
+        };
 
-      const updated = await prisma.meeting.update({
-        where: { id },
-        data: {
-          title: data.title,
-          startDate: toDate(data.startDate),
-          startTime: toDate(data.startTime),
-          endTime: toDate(data.endTime),
-          repeatMeeting: data.repeatMeeting,
-          frequency: data.frequency,
-          repeatOn: data.repeatOn ?? undefined,
-          repeatEvery: data.repeatEvery,
-          ends: data.ends,
-          linkedId: data.linkedTo || session.user.id, // Map linkedTo from form to linkedId, fallback to session user
-          location: data.location ?? undefined,
-          assignedId: data.assignedTo && data.assignedTo.trim() !== "" ? data.assignedTo : null, // Use assignedId, null if empty
-          participants: data.participants ?? undefined,
-          status: data.status,
-          tags: data.tags ?? undefined,
-          notes: data.notes ?? undefined,
-          files: data.files ?? undefined,
+      // const updated = await prisma.meeting
+      const getPreviousData = async () => {
+        const meeting = await prisma.meeting.findUnique({
+          where: { id: id },
+        });
+        return meeting;
+      };
+      console.log(await getPreviousData())
+      const updatedMeeting = await withActivityLogging(
+        async () => {
+          return await prisma.meeting.update({
+            where: { id: id },
+            data,
+            include: {
+              owner: true,
+              linkedTo: true,
+              assignedTo: true, 
+            },
+          });
         },
-   include: {
-    owner: true,
-    linkedTo: true,
-    assignedTo: true, 
-  },
-      });
+        {
+          entityType: 'Meeting',
+          entityId: id,
+          action: ActivityAction.Update,
+          userId: session.user.id,
+          getPreviousData,
+          getCurrentData: async (result: any) => {
+            return result;
+          },
+          metadata: {
+            updatedFields: Object.keys(data),
+          },
+        }
+      );
 
-      return NextResponse.json(updated);
+      return NextResponse.json(updatedMeeting);
     }
 
     if (method === "DELETE") {
@@ -175,7 +219,29 @@ export async function handleMethodWithId(req: Request, id: string) {
       if (!session?.user?.id)
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-      await prisma.meeting.delete({ where: { id } });
+      const getPreviousData = async () => {
+        return await prisma.meeting.findUnique({
+          where: { id },
+        });
+      };
+      
+      const deletedMeeting = await withActivityLogging(
+        async () => {
+          return await prisma.meeting.delete({
+            where: { id },
+          });
+        },
+        {
+          entityType: 'Meeting',
+          entityId: id,
+          action: ActivityAction.Delete,
+          userId: session.user.id,
+          getPreviousData,
+          metadata: {
+            deletedAt: new Date().toISOString(),
+          },
+        }
+      );
       return NextResponse.json({ success: true });
     }
 
