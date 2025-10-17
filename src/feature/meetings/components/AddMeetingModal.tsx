@@ -46,13 +46,9 @@ export const AddMeetingModal: React.FC<AddMeetingModalProps> = ({
         // Use store function to update the meeting
         await updateMeeting(meeting.id!, values);
       } else {
-const selectedOwner = userOptions.find(user => user.id === values.linkedTo);
-        const payload = {...values,
-          linkedTo: selectedOwner
-          ? { id: selectedOwner.id as string, name: selectedOwner.label as string }
-          : { id: '', name: '' },
-        }
-          await addMeeting(payload);
+        const selectedOwner = userOptions.find(user => user.id === values.linkedTo);
+        
+        await addMeeting(values);
       }
       onClose();
     } catch (error) {
