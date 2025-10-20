@@ -27,7 +27,7 @@ type TodoFormValues = {
 
 const schema = Yup.object({
     taskName: Yup.string().trim().required("Task name is required"),
-    linkedTo: Yup.string().trim().required("Company/Contact is required"),
+    linkedTo: Yup.string().trim(),
     assignedTo: Yup.string().trim(),
     status: Yup.string().required("Status is required"),
     priority: Yup.string().required("Priority is required"),

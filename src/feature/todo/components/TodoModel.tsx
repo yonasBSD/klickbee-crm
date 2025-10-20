@@ -60,7 +60,7 @@ export default function TodoSlideOver({ open, onClose, mode = 'add', task }: Tod
       }
       onClose();
     } catch (error) {
-      toast.error(`Error ${mode === 'edit' ? 'updating' : 'creating'} task:`);
+      console.log(`Error ${mode === 'edit' ? 'updating' : 'creating'} task:`);
     }
   };
   return (

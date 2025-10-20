@@ -147,7 +147,7 @@ export async function handleMethodWithId(req: Request, id: string) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
       const bodyRaw = await req.json();
-      const parsed = updateMeetingSchema.safeParse({ ...bodyRaw, id, ownerId: bodyRaw.owner.id });
+      const parsed = updateMeetingSchema.safeParse({ ...bodyRaw, id, });
       if (!parsed.success) {
         return NextResponse.json(
           { error: "Validation error", details: parsed.error.flatten() },
@@ -174,7 +174,6 @@ export async function handleMethodWithId(req: Request, id: string) {
           tags: parsedData.tags ?? undefined,
           notes: parsedData.notes ?? undefined,
           files: parsedData.files ?? undefined,
-          ownerId: parsedData.ownerId,
         };
 
       const getPreviousData = async () => {
@@ -189,7 +188,6 @@ export async function handleMethodWithId(req: Request, id: string) {
             where: { id: id },
             data,
             include: {
-              owner: true,
               linkedTo: true,
               assignedTo: true, 
             },
