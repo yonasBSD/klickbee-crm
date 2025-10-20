@@ -9,15 +9,15 @@ type SendEmailOptions = {
 }
 
 export async function sendEmail(options: SendEmailOptions): Promise<{ success: boolean; messageId?: string }> {
-  const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com"
-  const smtpPort = Number(process.env.SMTP_PORT || 587)
+  const smtpHost = "smtp.gmail.com"
+  const smtpPort = 587
   const smtpUser = process.env.SMTP_USER || ""
   const smtpPass = process.env.SMTP_PASS || ""
 
   const transporter = nodemailer.createTransport({
     host: smtpHost,
     port: smtpPort,
-    secure: smtpPort === 465,
+    secure: false,
     auth: smtpUser && smtpPass ? { user: smtpUser, pass: smtpPass } : undefined,
   })
 

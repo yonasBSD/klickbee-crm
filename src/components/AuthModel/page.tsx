@@ -6,9 +6,14 @@ import { Formik, Form, Field, ErrorMessage } from "formik"
 import * as Yup from "yup"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
+import toast from 'react-hot-toast'
 
 export function AuthModal() {
   const [isSignUp, setIsSignUp] = useState(false)
+  const [error, setError] = useState('')
+  const [showResendVerification, setShowResendVerification] = useState(false)
+  const [resendLoading, setResendLoading] = useState(false)
+  const [lastEmailAttempt, setLastEmailAttempt] = useState('')
   const {data: session} = useSession()
   const router = useRouter()
 
@@ -33,6 +38,9 @@ export function AuthModal() {
 
   // Form submission
   const handleSubmit = async (values: any) => {
+    setError('') // Clear any previous errors
+    setShowResendVerification(false)
+
     if (isSignUp) {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
@@ -41,22 +49,74 @@ export function AuthModal() {
       })
 
       if (res.ok) {
-        await signIn("credentials", {
+        const result = await signIn("credentials", {
           email: values.email,
           password: values.password,
-          redirect: true,
+          redirect: false, // Don't redirect automatically
           callbackUrl: "/",
         })
+
+        if (result?.error) {
+          setError(result.error)
+        } else if (result?.ok) {
+          router.push("/")
+        }
       } else {
-        alert("Signup failed")
+        const data = await res.json()
+        setError(data.error || 'Signup failed')
       }
     } else {
-      await signIn("credentials", {
+      const result = await signIn("credentials", {
         email: values.email,
         password: values.password,
-        redirect: true,
+        redirect: false, // Don't redirect automatically so we can handle errors
         callbackUrl: "/",
       })
+
+      if (result?.error) {
+        // Map NextAuth errors to user-friendly messages
+        if (result.error.includes('Password is incorrect')) {
+          setError('Password is incorrect')
+        } else if (result.error.includes('No account found')) {
+          setError('No account found with this email address')
+        } else if (result.error.includes('Email and password are required')) {
+          setError('Please enter both email and password')
+        } else if (result.error.includes('Account is not active')) {
+          setError('Account is not active. Please check your email for the verification link.')
+          setShowResendVerification(true)
+          setLastEmailAttempt(values.email)
+        } else {
+          setError(result.error)
+        }
+      } else if (result?.ok) {
+        // Successful login - redirect will happen via NextAuth
+        router.push("/")
+      }
+    }
+  }
+
+  const handleResendVerification = async () => {
+    if (!lastEmailAttempt) return
+
+    setResendLoading(true)
+    try {
+      const response = await fetch('/api/auth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: lastEmailAttempt }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        toast.success('Verification email sent! Please check your inbox.')
+      } else {
+        toast.error(data.error || 'Failed to resend verification email')
+      }
+    } catch (error) {
+      toast.error('Failed to resend verification email')
+    } finally {
+      setResendLoading(false)
     }
   }
 
@@ -75,6 +135,24 @@ export function AuthModal() {
                 : "Enter your email below to login to your account"}
             </p>
           </div>
+
+          {/* Error Display */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+              {error}
+              {showResendVerification && (
+                <div className="mt-3">
+                  <button
+                    onClick={handleResendVerification}
+                    disabled={resendLoading}
+                    className="text-sm bg-red-100 hover:bg-red-200 text-red-800 px-3 py-1 rounded transition-colors disabled:opacity-50"
+                  >
+                    {resendLoading ? 'Sending...' : 'Resend Verification Email'}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Formik Form */}
           <Formik
@@ -215,10 +293,16 @@ export function AuthModal() {
             )}
           </Formik>
 
-          {/* Google Button
-          <button
+          {/* Google Button */}
+          {/* <button
             type="button"
-            onClick={() => signIn("google", { callbackUrl: "/" })}
+            onClick={async () => {
+              setError('')
+              const result = await signIn("google", { callbackUrl: "/" })
+              if (result?.error) {
+                setError('Google sign-in failed. Please try again.')
+              }
+            }}
             className="w-full bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 flex items-center justify-center gap-3"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">

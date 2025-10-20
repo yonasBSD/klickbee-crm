@@ -21,26 +21,30 @@ export const useUserStore = create<UserStore>((set, get) => ({
   error: null,
 
   // 🧠 Fetch users from API
-  fetchUsers: async (userId?: string) => {
-    set({ loading: true });
-    try {
-      const query = userId ? `?userId=${userId}` : "";
-      const res = await fetch(`/api/auth/user${query}`);
-      if (!res.ok) throw new Error("Failed to fetch users");
+ fetchUsers: async (userId?: string) => {
+  set({ loading: true });
+  try {
+    const query = userId ? `?userId=${userId}` : "";
+    const res = await fetch(`/api/auth/user${query}`);
+    if (!res.ok) throw new Error("Failed to fetch users");
 
-      const data = await res.json();
-      if (data.success) {
-        set({ users: data.users, loading: false });
-      } else {
-        throw new Error(data.error || "Failed to fetch users");
-      }
-      
-    } catch (err: any) {
-      console.error("fetchUsers error:", err);
-      toast.error("Failed to load users");
-      set({ error: err.message, loading: false });
+    const data = await res.json();
+    if (data.success) {
+      // ✅ Only include users with status "active"
+      const activeUsers = data.users.filter((user: any) => user.status === "Active");
+
+      set({ users: activeUsers, loading: false });
+    } else {
+      throw new Error(data.error || "Failed to fetch users");
     }
-  },
+    
+  } catch (err: any) {
+    console.error("fetchUsers error:", err);
+    toast.error("Failed to load users");
+    set({ error: err.message, loading: false });
+  }
+},
+
 
   // 👤 Initialize current user from localStorage or API
   initializeCurrentUser: async () => {

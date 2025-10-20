@@ -6,12 +6,12 @@ export async function POST(req: Request) {
     const { host, port, sender, username, password } = body;
 
     let transporter = nodemailer.createTransport({
-        host: host ? host : 'smtp.gmail.com',
-        port: port ? port : '587',
-        secure: port === 465 ? true : false, // true for 465, false for other ports
+        host: host || 'smtp.gmail.com',
+        port: port || '587',
+        secure: port === '465', // true for 465, false for other ports
         auth: {
-            user: username ? username : 'safikhalil191@gmail.com',
-            pass: password ? password : 'password'
+            user: username || process.env.SMTP_USER,
+            pass: password || process.env.SMTP_PASS
         }
     });
 

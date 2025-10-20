@@ -13,20 +13,30 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error('Email and password are required')
+        }
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
         })
-        if (!user || !user.password) return null
+        if (!user) {
+          throw new Error('No account found with this email address')
+        }
+
+        if (!user.password) {
+          throw new Error('Please contact support - account setup incomplete')
+        }
 
         // Block login if user is not Active
         if (user.status !== 'Active') {
-          return null
+          throw new Error('Account is not active. Please Check your email for the invitation.')
         }
 
         const isValid = await compare(credentials.password, user.password)
-        if (!isValid) return null
+        if (!isValid) {
+          throw new Error('Password is incorrect')
+        }
 
         // Update lastLogin on successful login
         try {
@@ -49,9 +59,9 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
   },
-  pages: {
-    signIn: "/auth",
-  },
+  // pages: {
+  //   signIn: "/auth",
+  // },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {

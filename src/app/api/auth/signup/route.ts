@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/libs/prisma"
 import { hash } from "bcryptjs"
 import { sendEmail } from "@/libs/email"
+import { randomBytes } from "crypto"
 
 export async function POST(req: Request) {
   try {
@@ -22,15 +23,20 @@ export async function POST(req: Request) {
         email,
         password: hashedPassword,
         name,
-        status: 'Inactive',
+        status: 'Inactive' as any,
       },
     })
+
     try {
+      // Generate verification token and URL
+      const token = randomBytes(32).toString('hex')
+      const verificationUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/verify?token=${token}&email=${encodeURIComponent(email)}&action=verify`
+
       await sendEmail({
         to: email,
         subject: "Activate your Klickbee CRM account",
-        text: `Hello${name ? ` ${name}` : ''},\n\nYour account has been created and is currently inactive. Please follow the activation instructions sent to you to activate your account.`,
-        html: `<p>Hello${name ? ` ${name}` : ''},</p><p>Your account has been created and is currently <b>inactive</b>.</p><p>Please follow the activation instructions to activate your account.</p>`,
+        text: `Hello${name ? ` ${name}` : ''},\n\nYour account has been created successfully! Please click the link below to verify and activate your account:\n\n${verificationUrl}\n\nIf you didn't create this account, please ignore this email.`,
+        html: `<p>Hello${name ? ` ${name}` : ''},</p><p>Your account has been created successfully!</p><p>Please click the button below to verify and activate your account:</p><p><a href="${verificationUrl}" style="background-color: #000; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Verify Account</a></p><p>If the button doesn't work, copy and paste this link into your browser:</p><p>${verificationUrl}</p><p>If you didn't create this account, please ignore this email.</p>`,
       })
     } catch (e) {
       console.error('Failed to send activation email', e)

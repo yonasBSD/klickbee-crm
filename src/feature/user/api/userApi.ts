@@ -6,14 +6,19 @@ import { withActivityLogging } from "@/libs/apiUtils"
 import { ActivityAction } from "@prisma/client"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/feature/auth/lib/auth"
+import { randomBytes } from "crypto"
 
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
     const limit = Number(url.searchParams.get("limit") ?? 50);
     const userId = url.searchParams.get("userId");
+    const status = url.searchParams.get("status");
 
-    const where = userId ? { id: userId } : undefined;
+    const where = {
+      ...(userId ? { userId } : {}),
+      ...(status ? { status } : {})
+    } as any;
     const users = await prisma.user.findMany({
       where,
       orderBy: { createdAt: "desc" },
@@ -69,11 +74,15 @@ export async function POST(req: Request) {
     )
 
     try {
+      // Generate verification token and URL for password setup
+      const token = randomBytes(32).toString('hex')
+      const verificationUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/verify?token=${token}&email=${encodeURIComponent(email)}&action=set_password`
+
       await sendEmail({
         to: email,
         subject: "You're invited to Klickbee CRM",
-        text: `Hello${name ? ` ${name}` : ""},\n\nYou've been invited to Klickbee CRM. Please check your email for next steps to set your password.`,
-        html: `<p>Hello${name ? ` ${name}` : ""},</p><p>You've been invited to <b>Klickbee CRM</b>.</p><p>Please follow the instructions to set your password and activate your account.</p>`,
+        text: `Hello${name ? ` ${name}` : ""},\n\nYou've been invited to Klickbee CRM. Please click the link below to set your password and activate your account:\n\n${verificationUrl}\n\nIf you didn't expect this invitation, please ignore this email.`,
+        html: `<p>Hello${name ? ` ${name}` : ""},</p><p>You've been invited to <b>Klickbee CRM</b>.</p><p>Please click the button below to set your password and activate your account:</p><p><a href="${verificationUrl}" style="background-color: #000; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Set Password & Activate</a></p><p>If the button doesn't work, copy and paste this link into your browser:</p><p>${verificationUrl}</p><p>If you didn't expect this invitation, please ignore this email.</p>`,
       })
     } catch (mailErr) {
       console.error("Failed to send invite email", mailErr)

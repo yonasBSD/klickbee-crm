@@ -1,11 +1,10 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DealsHeader } from '../../deals/components/Deals-Header';
 import { Table, TableColumn, Badge } from '@/components/ui/Table';
-import { UserData } from './libs/UserData';
+import { getUserData } from './libs/UserData';
 import { UserType } from "./types/types";
 
-import GridView from '../../deals/components/DealsGridView'
 import { UsersHeader } from './components/User-Header';
 import { Search } from 'lucide-react';
 import { DropDown } from '@/components/ui/DropDown';
@@ -40,9 +39,38 @@ const statusOptions = [
 const UsersFeat = () => {
   const [statusOptionsUser, setstatusOptionsUser] = useState('all-status');
   const [addUser, setAddUser] = useState(false);
+  const [users, setUsers] = useState<UserType[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const handleAddUser = () => {
     setAddUser((prev) => !prev)
   }
+
+  // Fetch users from database
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const userData = await getUserData();
+        setUsers(userData);
+      } catch (error) {
+        console.error('Failed to load users:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUsers();
+  }, []);
+
+  // Refresh users after adding a new user
+  const refreshUsers = async () => {
+    try {
+      const userData = await getUserData();
+      setUsers(userData);
+    } catch (error) {
+      console.error('Failed to refresh users:', error);
+    }
+  };
   return (
     <div>
      
@@ -72,15 +100,15 @@ const UsersFeat = () => {
             />
           </div>
 
-          <div className='rounded-lg border border-[var(--border-gray)] bg-white shadow-sm'>
+          <div className=''>
 
-            <Table columns={columns} data={UserData} selectable={true} />
+            <Table columns={columns} data={users} selectable={true} loading={loading} />
 
           </div>
 
           {/* rows component */}
           <div className='flex justify-between items-center py-3'>
-            <p className='font-normal text-sm leading-[20px] tracking-[0px] text-[#71717A] ml-1'>0 of 5 row(s) selected.</p>
+            <p className='font-normal text-sm leading-[20px] tracking-[0px] text-[#71717A] ml-1'>{loading ? 'Loading...' : `${users.length} of ${users.length} row(s) selected.`}</p>
             <div className='flex gap-2 items-center'>
               <button className='border-1 border-[#E4E4E7] w-[90px] h-9 rounded-sm font-medium text-sm leading-[20px] tracking-[0px] text-[#09090B] opacity-50 cursor-pointer'>Previous</button>
               <button className='border-1 border-[#E4E4E7] w-[90px] h-9 rounded-sm font-medium text-sm leading-[20px] tracking-[0px] text-[#09090B] opacity-50 cursor-pointer'>Next</button>
@@ -90,7 +118,10 @@ const UsersFeat = () => {
           </div>
         </div>
       </div>
-      </> : <AddUser/> }
+      </> : <AddUser onClose={() => {
+        handleAddUser();
+        refreshUsers(); // Refresh users when closing AddUser modal
+      }}/> }
     </div>
   );
 };

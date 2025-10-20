@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { ChevronUp, ChevronDown, MoreHorizontal } from 'lucide-react'
 import AvatarInitials from '@/components/ui/AvatarInitials'
+import Loading from '@/components/ui/Loading'
 
 export interface TableColumn<T = any> {
   key: string
@@ -238,8 +239,12 @@ export const Table = <T,>({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="h-64">
+        <Loading
+          label="Loading users..."
+          variant="minimal"
+          size="md"
+        />
       </div>
     )
   }
