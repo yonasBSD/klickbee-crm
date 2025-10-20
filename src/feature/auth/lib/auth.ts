@@ -20,8 +20,23 @@ export const authOptions: NextAuthOptions = {
         })
         if (!user || !user.password) return null
 
+        // Block login if user is not Active
+        if (user.status !== 'Active') {
+          return null
+        }
+
         const isValid = await compare(credentials.password, user.password)
         if (!isValid) return null
+
+        // Update lastLogin on successful login
+        try {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { lastLogin: new Date() },
+          })
+        } catch (e) {
+          // non-blocking; if update fails, still allow login
+        }
 
         return { id: user.id, email: user.email, name: user.name }
       },
