@@ -41,6 +41,7 @@ export function ProspectHeader({ selectedProspects = [], selectedProspectRows = 
    const [searchQueries, setSearchQueries] = useState<Record<string, string>>({});
       const [showNewProspect, setShowNewProspect] = useState<boolean>(false);
   const [editProspect, setEditProspect] = useState<Prospect | null>(null);
+  const setSearchTerm = useProspectsStore((state) => state.setSearchTerm);
   
   const [showActionDropdown, setShowActionDropdown] = useState(false);
 
@@ -137,6 +138,7 @@ export function ProspectHeader({ selectedProspects = [], selectedProspectRows = 
               bg-card border border-[var(--border-gray)] rounded-md
               text-sm outline-none shadow-sm
             "
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 

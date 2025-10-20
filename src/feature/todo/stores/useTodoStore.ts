@@ -18,6 +18,7 @@ interface TodoStore {
   filters: TodoFilters;
 
   fetchTodos: (ownerId?: string) => Promise<void>;
+  setSearchTerm: (search: string) => void;
   setFilters: (filters: TodoFilters) => void;
   applyFilters: () => void;
   resetFilters: () => void;
@@ -124,6 +125,13 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
     };
     set({ filters: initial, filteredTodos: get().todos });
   },
+    setSearchTerm: (search: string) => {
+  const { todos } = get();
+  const filtered = todos.filter((d) =>
+    d.taskName?.toLowerCase().includes(search.toLowerCase())
+  );
+  set({ filteredTodos: filtered });
+},
 
   //  Fetch todos from API
   fetchTodos: async (ownerId?: string) => {

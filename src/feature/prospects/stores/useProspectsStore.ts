@@ -17,6 +17,7 @@ interface ProspectStore {
   filters: FilterData;
 
   fetchProspects: (ownerId?: string) => Promise<void>;
+  setSearchTerm: (search: string) => void;
   setFilters: (filters: FilterData) => void;
   applyFilters: () => void;
   resetFilters: () => void;
@@ -175,6 +176,13 @@ export const useProspectsStore = create<ProspectStore>((set, get) => ({
     set({ filters: initial, filteredProspects: get().prospects });
   },
 
+  setSearchTerm: (search: string) => {
+    const { prospects } = get();
+    const filtered = prospects.filter((p) =>
+      p.fullName?.toLowerCase().includes(search.toLowerCase())
+    );
+    set({ filteredProspects: filtered });
+  },
   // 🧠 Fetch prospects from API
   fetchProspects: async (ownerId?: string) => {
     set({ loading: true });
@@ -406,7 +414,6 @@ export const useProspectsStore = create<ProspectStore>((set, get) => ({
             status: prospectData.status || 'New',
           };
 
-          console.log('Importing prospect:', prospectPayload);
 
           const res = await fetch('/api/admin/prospects', {
             method: 'POST',

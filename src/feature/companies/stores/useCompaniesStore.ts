@@ -14,6 +14,7 @@ interface CompanyStore {
   filters: FilterData;
 
   fetchCompanies: (ownerId?: string) => Promise<void>;
+  setSearchTerm: (search: string) => void;
   setFilters: (filters: FilterData) => void;
   applyFilters: () => void;
   resetFilters: () => void;
@@ -146,6 +147,14 @@ export const useCompaniesStore = create<CompanyStore>((set, get) => ({
       ],
     };
     set({ filters: initialFilters, filteredCompanies: get().companies });
+  },
+
+  setSearchTerm: (search: string) => {
+    const { companies } = get();
+    const filtered = companies.filter((c) =>
+      c.fullName?.toLowerCase().includes(search.toLowerCase())
+    );
+    set({ filteredCompanies: filtered });
   },
   fetchCompanies: async (ownerId?: string) => {
     set({ loading: true });
@@ -332,7 +341,6 @@ export const useCompaniesStore = create<CompanyStore>((set, get) => ({
             // Note: owner fields should be set by the API based on the authenticated user
           };
 
-          console.log('Importing company:', companyPayload);
 
           const res = await fetch('/api/admin/companies', {
             method: 'POST',

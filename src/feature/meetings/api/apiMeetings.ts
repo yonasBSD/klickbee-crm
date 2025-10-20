@@ -34,7 +34,7 @@ export async function POST(req: Request) {
       startDate: toDate(bodyRaw.startDate),
       startTime: toDate(bodyRaw.startTime),
       endTime: toDate(bodyRaw.endTime),
-      ownerId: session.user.id,
+      ownerId: bodyRaw.owner.id,
       linkedId: bodyRaw.linkedTo, 
       assignedTo: bodyRaw.assignedTo && bodyRaw.assignedTo.trim() !== "" ? bodyRaw.assignedTo : null,
     });
@@ -147,7 +147,7 @@ export async function handleMethodWithId(req: Request, id: string) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
       const bodyRaw = await req.json();
-      const parsed = updateMeetingSchema.safeParse({ ...bodyRaw, id });
+      const parsed = updateMeetingSchema.safeParse({ ...bodyRaw, id, });
       if (!parsed.success) {
         return NextResponse.json(
           { error: "Validation error", details: parsed.error.flatten() },
@@ -182,14 +182,12 @@ export async function handleMethodWithId(req: Request, id: string) {
         });
         return meeting;
       };
-      console.log(await getPreviousData())
       const updatedMeeting = await withActivityLogging(
         async () => {
           return await prisma.meeting.update({
             where: { id: id },
             data,
             include: {
-              owner: true,
               linkedTo: true,
               assignedTo: true, 
             },

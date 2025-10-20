@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/feature/auth/lib/auth";
 import { prisma } from "@/libs/prisma";
 import { createTodoSchema, updateTodoSchema } from "../schema/todoSchema";
-import { ActivityAction } from "@prisma/client";
+import { ActivityAction, Prisma } from "@prisma/client";
 import { withActivityLogging } from "@/libs/apiUtils";
 
 export async function POST(req: Request) {
@@ -81,10 +81,19 @@ export async function GET(req: Request) {
     const limit = Number(url.searchParams.get("limit") ?? 50);
     const linkedId = url.searchParams.get("linkedId");
     const assignedId = url.searchParams.get("assignedId");
+    const search = url.searchParams.get("search");
 
     const where = {
       ...(linkedId ? { linkedId } : {}),
       ...(assignedId ? { assignedId } : {}),
+       ...(search
+              ? {
+                    taskName: {
+                    contains: search,
+                    mode: Prisma.QueryMode.insensitive,
+                  },
+                }
+              : {}),
     };
     const todos = await prisma.todo.findMany({
       where,
@@ -122,7 +131,7 @@ export async function handleMethodWithId(req: Request, id: string) {
       const body = await req.json();
 
       // validate with zod - id comes from URL params, not body
-      const parsed = updateTodoSchema.safeParse(body);
+      const parsed = updateTodoSchema.safeParse({...body, linkedTo: body.linkedTo});
       if (!parsed.success) {
         return NextResponse.json(
           { error: "Validation error", details: parsed.error.flatten() },
@@ -133,7 +142,7 @@ export async function handleMethodWithId(req: Request, id: string) {
       const parsedData = parsed.data as any;
       const data = {
         taskName: parsedData.taskName,
-        linkedTo: parsedData.linkedId ? { connect: { id: parsedData.linkedId } } : undefined,
+        linkedTo: parsedData.linkedTo ? { connect: { id: parsedData.linkedTo } } : undefined,
         assignedTo: parsedData.assignedId ? { connect: { id: parsedData.assignedId } } : undefined,
         status: parsedData.status,
         priority: parsedData.priority,
@@ -147,7 +156,6 @@ export async function handleMethodWithId(req: Request, id: string) {
         });
         return todo;
       };
-      console.log(await getPreviousData())
       const updatedTodo = await withActivityLogging(
         async () => {
           return await prisma.todo.update({

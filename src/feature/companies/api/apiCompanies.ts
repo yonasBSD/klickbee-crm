@@ -5,7 +5,7 @@ import { authOptions } from "@/feature/auth/lib/auth";
 import { prisma } from "@/libs/prisma";
 import { createCompanySchema, updateCompanySchema } from "../schema/companySchema";
 import { withActivityLogging } from "@/libs/apiUtils";
-import { ActivityAction } from "@prisma/client";
+import { ActivityAction, Prisma } from "@prisma/client";
 
 export async function POST(req: Request) {
   try {
@@ -81,6 +81,7 @@ export async function GET(req: Request) {
     const limit = Number(url.searchParams.get("limit") ?? 50);
     const ownerId = url.searchParams.get("ownerId");
     const status = url.searchParams.get("status");
+    const search = url.searchParams.get("search");
 
     let where: Record<string, any> = {};
     if(ownerId){
@@ -88,6 +89,12 @@ export async function GET(req: Request) {
     }
     if(status){
       where.status = status;
+    }
+    if(search){
+      where.fullName = {
+        contains: search,
+        mode: Prisma.QueryMode.insensitive,
+      }
     }
     const companies = await prisma.company.findMany({
       where,
@@ -122,7 +129,7 @@ export async function handleMethodWithId(req: Request, id: string) {
       }
 
       const body = await req.json();
-      const parsed = updateCompanySchema.safeParse({ ...body, id });
+      const parsed = updateCompanySchema.safeParse({ ...body, id, ownerId: body.owner });
       if (!parsed.success) {
         return NextResponse.json(
           { error: "Validation error", details: parsed.error.flatten() },
@@ -143,6 +150,7 @@ export async function handleMethodWithId(req: Request, id: string) {
           assing: parsedData.assing ?? undefined,
           notes: parsedData.notes ?? undefined,
           files: parsedData.files ?? undefined,
+          ownerId: parsedData.ownerId,
         };
 
         const getPreviousData = async () => {
@@ -151,7 +159,6 @@ export async function handleMethodWithId(req: Request, id: string) {
           });
           return company;
         };
-      console.log(await getPreviousData())
       const updatedCompany = await withActivityLogging(
         async () => {
           return await prisma.company.update({

@@ -5,7 +5,7 @@ import { authOptions } from "@/feature/auth/lib/auth";
 import { prisma } from "@/libs/prisma";
 import { createCustomerSchema, updateCustomerSchema } from "../schema/customerSchema";
 import { withActivityLogging } from "@/libs/apiUtils";
-import { ActivityAction } from "@prisma/client";
+import { ActivityAction, Prisma } from "@prisma/client";
 
 export async function POST(req: Request) {
   try {
@@ -80,12 +80,21 @@ export async function GET(req: Request) {
     const limit = Number(url.searchParams.get("limit") ?? 50);
     const ownerId = url.searchParams.get("ownerId");
 const companyId = url.searchParams.get("companyId");
+const search = url.searchParams.get("search");
   
 
 
       const where = {
       ...(ownerId ? { ownerId } : {}),
       ...(companyId ? { companyId } : {}),
+      ...(search
+              ? {
+                    fullName: {
+                    contains: search,
+                    mode: Prisma.QueryMode.insensitive,
+                  },
+                }
+              : {}),
     };
     const customers = await prisma.customer.findMany({
       where,
@@ -121,7 +130,7 @@ export async function handleMethodWithId(req: Request, id: string) {
         }
 
       const body = await req.json();
-      const parsed = updateCustomerSchema.safeParse({ ...body, id });
+      const parsed = updateCustomerSchema.safeParse({ ...body, id, ownerId: body.owner });
       if (!parsed.success) {
         return NextResponse.json(
           { error: "Validation error", details: parsed.error.flatten() },
@@ -139,6 +148,7 @@ export async function handleMethodWithId(req: Request, id: string) {
           tags: parsedData.tags ?? undefined,
           notes: parsedData.notes ?? undefined,
           files: parsedData.files ?? undefined,
+          ownerId: parsedData.ownerId,
       };
 
       const getPreviousData = async () => {
@@ -147,7 +157,6 @@ export async function handleMethodWithId(req: Request, id: string) {
         });
         return customer;
       };
-      console.log(await getPreviousData())
       const updatedCustomer = await withActivityLogging(
         async () => {
           return await prisma.customer.update({

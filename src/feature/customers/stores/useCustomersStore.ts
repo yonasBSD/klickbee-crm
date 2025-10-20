@@ -17,6 +17,7 @@ interface CustomerStore {
   filters: FilterData;
 
   fetchCustomers: (ownerId?: string) => Promise<void>;
+  setSearchTerm: (search: string) => void;
   setFilters: (filters: FilterData) => void;
   applyFilters: () => void;
   resetFilters: () => void;
@@ -154,6 +155,13 @@ export const useCustomersStore = create<CustomerStore>((set, get) => ({
     set({ filters: initial, filteredCustomers: get().customers });
   },
 
+  setSearchTerm: (search: string) => {
+    const { customers } = get();
+    const filtered = customers.filter((c) =>
+      c.fullName?.toLowerCase().includes(search.toLowerCase())
+    );
+    set({ filteredCustomers: filtered });
+  },
   // 🧠 Fetch customers from API
   fetchCustomers: async (ownerId?: string) => {
     set({ loading: true });
@@ -343,7 +351,6 @@ export const useCustomersStore = create<CustomerStore>((set, get) => ({
             // Note: userId and ownerId should be set by the API based on the authenticated user
           };
 
-          console.log('Importing customer:', customerPayload);
 
           const res = await fetch('/api/admin/customers', {
             method: 'POST',

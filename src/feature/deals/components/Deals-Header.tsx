@@ -28,7 +28,8 @@ export function DealsHeader({ view, setView, selectedDeals = [], selectedDealRow
   const [editDeal, setEditDeal] = useState<Deal | null>(null);
   const [closedDate, setClosedDate] = useState<Date | null>(null);
   const searchParams = useSearchParams()
-  
+    const setSearchTerm = useDealStore((s) => s.setSearchTerm);
+
   // Export/Import via store (already destructured above)
   const [showActionDropdown, setShowActionDropdown] = useState(false);
 
@@ -132,6 +133,8 @@ export function DealsHeader({ view, setView, selectedDeals = [], selectedDealRow
               bg-card border border-[var(--border-gray)] rounded-md
               text-sm outline-none shadow-sm
             "
+             onChange={(e) => setSearchTerm(e.target.value)}
+
           />
         </div>
 

@@ -42,6 +42,7 @@ export function CompaniesHeader({ editCompany, showEditModal, onEditCompany, onC
   const [searchQueries, setSearchQueries] = useState<Record<string, string>>({});
   const [showNewCompany, setShowNewCompany] = useState<boolean>(false);
   const [showActionDropdown, setShowActionDropdown] = useState(false);
+  const setSearchTerm = useCompaniesStore((state) => state.setSearchTerm);
 
   const handleCloseModal = () => {
     setShowNewCompany(false);
@@ -134,6 +135,7 @@ export function CompaniesHeader({ editCompany, showEditModal, onEditCompany, onC
               bg-card border border-[var(--border-gray)] rounded-md
               text-sm outline-none shadow-sm
             "
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 

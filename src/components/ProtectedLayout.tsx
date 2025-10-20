@@ -12,7 +12,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
     const router = useRouter()
 
     useEffect(() => {
-        if (status === "unauthenticated" && window.location.pathname !== "/auth") {
+        if (status === "unauthenticated" && window.location.pathname !== "/auth" && window.location.pathname !== "/verify") {
             router.push("/auth")
             setIsAuthenticated(false)
         }else if (status === "authenticated") {

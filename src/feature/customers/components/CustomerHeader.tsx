@@ -43,6 +43,8 @@ export function CustomerHeader({ editCustomer, showEditModal, onEditCustomer, on
   const [showNewCustomers, setShowNewCustomers] = useState<boolean>(false);
   const [showActionDropdown, setShowActionDropdown] = useState(false);
   const searchParams = useSearchParams()
+  const setSearchTerm = useCustomersStore((state) => state.setSearchTerm);
+  
   
   useEffect(() => {
     const newParam = searchParams.get("new")
@@ -141,6 +143,7 @@ export function CustomerHeader({ editCustomer, showEditModal, onEditCustomer, on
               bg-card border border-[var(--border-gray)] rounded-md
               text-sm outline-none shadow-sm
             "
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 
