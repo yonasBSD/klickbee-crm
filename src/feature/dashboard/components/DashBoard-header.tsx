@@ -10,26 +10,31 @@ const userOptions = [
   { value: "inactive", label: "Inactive Users" },
 ]
 
-const statusOptions = [
-  { value: "all", label: "All Status" },
-  { value: "7days", label: "Last 7 days" },
-  { value: "28days", label: "Last 28 days" },
-  { value: "365days", label: "Last 365 days" },
-]
 
 const timePeriodOptions = [
-  { value: "today", label: "Today" },
   { value: "this-week", label: "This Week" },
   { value: "this-month", label: "This Month" },
   { value: "this-year", label: "This Year" },
 ]
 
-export function DashboardHeader() {
+export function DashboardHeader({
+  selectedTimePeriod = "this-month",
+  onTimePeriodChange
+}: {
+  selectedTimePeriod?: string;
+  onTimePeriodChange?: (value: string) => void;
+}) {
   const [selectedUser, setSelectedUser] = useState("all")
   const [selectedStatus, setSelectedStatus] = useState("all")
-  const [selectedTimePeriod, setSelectedTimePeriod] = useState("this-month")
   const [actionLabel, setActionLabel] = useState("New Deal") // <-- new state
   const router = useRouter()
+
+  // Handle time period changes
+  const handleTimePeriodChange = (value: string) => {
+    if (onTimePeriodChange) {
+      onTimePeriodChange(value)
+    }
+  }
 
 
   // state for arrow dropdown
@@ -77,10 +82,10 @@ export function DashboardHeader() {
           <DropDown
             options={timePeriodOptions}
             value={selectedTimePeriod}
-            onChange={setSelectedTimePeriod}
+            onChange={handleTimePeriodChange}
           />
           <DropDown options={userOptions} value={selectedUser} onChange={setSelectedUser} />
-          <DropDown options={statusOptions} value={selectedStatus} onChange={setSelectedStatus} />
+          {/* <DropDown options={statusOptions} value={selectedStatus} onChange={setSelectedStatus} /> */}
         </div>
 
         {/* New Deal + Arrow */}

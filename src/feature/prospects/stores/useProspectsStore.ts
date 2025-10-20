@@ -72,7 +72,7 @@ export const useProspectsStore = create<ProspectStore>((set, get) => ({
     }));
     return [
       { id: "all", label: "All Owner", checked: true },
-      { id: "me", label: "Me", checked: false },
+      // { id: "me", label: "Me", checked: false },
       ...userOptions,
     ];
   },
@@ -121,9 +121,13 @@ export const useProspectsStore = create<ProspectStore>((set, get) => ({
       filtered = filtered.filter((p: Prospect) =>
         activeOwners.some((f: any) => {
           if (f.id === "me") {
-            // TODO: Replace with real current user id
-            const currentId = "current-user-id";
-            if (typeof p.owner === 'object') return p.owner?.id === currentId;
+            // Get the current user's ID using the store's method
+            const currentUserId = useUserStore.getState().getCurrentUserId();
+            const currentUser = useUserStore.getState().currentUser;
+            if (typeof p.owner === 'object') return p.owner?.id === currentUserId;
+            if (typeof p.owner === 'string') {
+              return p.owner === currentUser?.name || p.owner === currentUser?.email;
+            }
             return false;
           }
           if (typeof p.owner === 'object') {
@@ -199,6 +203,23 @@ export const useProspectsStore = create<ProspectStore>((set, get) => ({
       }) : data;
       set({ prospects: cleanData, loading: false });
       get().applyFilters();
+
+      // Initialize current user if not set and we have users data
+      const { users, currentUser } = useUserStore.getState();
+
+      if (users.length === 0) {
+        // Fetch users first if not loaded
+        await useUserStore.getState().fetchUsers();
+      }
+
+      const { users: updatedUsers, currentUser: updatedCurrentUser } = useUserStore.getState();
+
+      if (updatedUsers.length > 0) {
+        // Initialize current user from localStorage or API if not already set
+        if (!updatedCurrentUser) {
+          await useUserStore.getState().initializeCurrentUser();
+        }
+      }
     } catch (err: any) {
       console.error("fetchProspects error:", err);
       toast.error("Failed to load prospects");

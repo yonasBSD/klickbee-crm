@@ -59,7 +59,6 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
     const userOptions = users.slice(0, 10).map((u) => ({ id: u.id, label: u.name || u.email, checked: false }));
     return [
       { id: 'all', label: 'All Owner', checked: true },
-      { id: 'me', label: 'Me', checked: false },
       ...userOptions,
     ];
   },
@@ -87,14 +86,18 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
       filtered = filtered.filter((t) => selPriority.includes(t.priority));
     }
 
-    // Owner filter - match assignedTo name/email; if 'me' used, requires current user id logic
+    // Owner filter - match assignedTo name/email/id; handle 'me' with current user ID
     const selOwners = filters.owner.filter((o) => o.checked && o.id !== 'all').map((o) => o.id);
     if (selOwners.length > 0) {
       filtered = filtered.filter((t) => {
-        if (!t.assignedTo) return false;
-        const assignedName = typeof t.assignedTo === 'object' ? t.assignedTo.name : t.assignedTo;
-        // Note: 'me' handling requires current user id mapping; skipping for now
-        return selOwners.includes('me') ? false : selOwners.includes(assignedName || '');
+        if (!t.assignedTo && !t.assignedId) return false;
+        const currentUserId = useUserStore.getState().getCurrentUserId();
+        if (selOwners.includes('me')) {
+          return t.assignedId === currentUserId;  // Use assignedId for ID matching
+        }
+        // For other owners, match by assignedId or string assignedTo
+        const assignedId = t.assignedId || (typeof t.assignedTo === 'string' ? t.assignedTo : '');
+        return selOwners.includes(assignedId);
       });
     }
 

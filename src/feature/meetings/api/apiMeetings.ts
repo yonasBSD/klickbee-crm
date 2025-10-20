@@ -176,7 +176,6 @@ export async function handleMethodWithId(req: Request, id: string) {
           files: parsedData.files ?? undefined,
         };
 
-      // const updated = await prisma.meeting
       const getPreviousData = async () => {
         const meeting = await prisma.meeting.findUnique({
           where: { id: id },

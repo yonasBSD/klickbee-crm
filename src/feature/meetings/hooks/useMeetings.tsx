@@ -5,6 +5,7 @@ import { useMeetingsStore } from '../stores/useMeetingsStore';
 export const useMeetings = () => {
   const {
     meetings,
+    filteredMeetings,
     loading,
     isDeleting,
     isEditing,
@@ -52,7 +53,7 @@ export const useMeetings = () => {
   }, []);
 
   return {
-    meetings,
+    meetings: filteredMeetings,
     loading,
     isDeleting,
     isEditing,

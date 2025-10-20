@@ -274,6 +274,8 @@ export default function MeetingForm({ onSubmit, onClose, mode = 'add', initialDa
             })() : null,
             tags: vals.tags ? vals.tags.map((t: string) => t.trim()).filter(Boolean) : [],
             participants: vals.participants ? vals.participants.map((p: string) => p.trim()).filter(Boolean) : [],
+            linkedTo: vals.linkedTo && vals.linkedTo.trim() !== '' ? vals.linkedTo : undefined,
+            assignedTo: vals.assignedTo && vals.assignedTo.trim() !== '' ? vals.assignedTo : undefined,
             files: uploadedFiles
           };
 
@@ -389,7 +391,7 @@ export default function MeetingForm({ onSubmit, onClose, mode = 'add', initialDa
             <TextInput label="Location" name="location" placeholder="Conference Room A, Office, etc." />
 
             {/* Link Location */}
-            {/* <TextInput label="Link Location" name="meetingLink" placeholder="Zoom / Meet link" /> */}
+            <TextInput label="Link Location" name="meetingLink" placeholder="Zoom / Meet link" />
 
             {/* Assigned To */}
             <div>

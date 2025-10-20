@@ -42,8 +42,8 @@ export const useUserStore = create<UserStore>((set, get) => ({
     }
   },
 
-  // 👤 Initialize current user from localStorage
-  initializeCurrentUser: () => {
+  // 👤 Initialize current user from localStorage or API
+  initializeCurrentUser: async () => {
     const storedUserId = localStorage.getItem('currentUserId');
     const { users } = get();
 
@@ -51,7 +51,29 @@ export const useUserStore = create<UserStore>((set, get) => ({
       const user = users.find(u => u.id === storedUserId);
       if (user) {
         set({ currentUser: user });
+        return;
       }
+    }
+
+    // If no stored ID or no matching user, fetch current user from API
+    try {
+      const res = await fetch('/api/auth/user');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.user) {
+          const currentUser = data.user;
+          // Add to users if not already there
+          const updatedUsers = [...users];
+          if (!updatedUsers.find(u => u.id === currentUser.id)) {
+            updatedUsers.push(currentUser);
+            set({ users: updatedUsers });
+          }
+          set({ currentUser });
+          localStorage.setItem('currentUserId', currentUser.id);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch current user:', err);
     }
   },
 

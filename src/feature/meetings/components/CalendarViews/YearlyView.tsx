@@ -47,8 +47,8 @@ export const YearlyView: React.FC<YearlyViewProps> = ({
         </h3>
         
         <div className="grid grid-cols-7">
-          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(day => (
-            <div key={day} className="text-center text-xs font-medium text-gray-500 py-1">
+          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
+            <div key={`day-${index}`} className="text-center text-xs font-medium text-gray-500 py-1">
               {day}
             </div>
           ))}
@@ -89,8 +89,8 @@ export const YearlyView: React.FC<YearlyViewProps> = ({
 
   return (
     <div className="grid grid-cols-3  w-full">
-      {months.map(month => (
-        <div key={month.getMonth()}>
+      {months.map((month, monthIndex) => (
+        <div key={`${month.getFullYear()}-${month.getMonth()}-${monthIndex}`}>
           {renderMiniCalendar(month)}
         </div>
       ))}

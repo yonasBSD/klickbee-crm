@@ -70,7 +70,7 @@ export const useDealStore = create<DealStore>((set, get) => ({
     }));
     return [
       { id: "all", label: "All Owner", checked: true },
-      { id: "me", label: "Me", checked: false },
+      // { id: "me", label: "Me", checked: false },
       ...userOptions,
     ];
   },
@@ -210,19 +210,17 @@ export const useDealStore = create<DealStore>((set, get) => ({
       // Initialize current user if not set and we have users data
       const { users, currentUser } = useUserStore.getState();
 
-      if (users.length > 0) {
-        // Initialize current user from localStorage if not already set
-        if (!currentUser) {
-          useUserStore.getState().initializeCurrentUser();
+      if (users.length === 0) {
+        // Fetch users first if not loaded
+        await useUserStore.getState().fetchUsers();
+      }
 
-          // If still no current user, set safi as default (since user is logged in as safi)
-          const { currentUser: newCurrentUser } = useUserStore.getState();
-          if (!newCurrentUser) {
-            const safiUser = users.find(u => u.name === 'safi');
-            if (safiUser) {
-              useUserStore.getState().setCurrentUser(safiUser);
-            }
-          }
+      const { users: updatedUsers, currentUser: updatedCurrentUser } = useUserStore.getState();
+
+      if (updatedUsers.length > 0) {
+        // Initialize current user from localStorage or API if not already set
+        if (!updatedCurrentUser) {
+          await useUserStore.getState().initializeCurrentUser();
         }
       }
     } catch (err: any) {
