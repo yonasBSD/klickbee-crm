@@ -155,6 +155,15 @@ export async function handleMethodWithId(req: Request, id: string) {
         });
         return prospect;
       };
+
+      // Check if status is being updated to set lastContact
+      const previousProspect = await getPreviousData();
+      const isStatusChanging = previousProspect && previousProspect.status !== parsedData.status;
+      
+      // Add lastContact to data if status is changing
+      if (isStatusChanging) {
+        data.lastContact = new Date();
+      }
       const updatedProspect = await withActivityLogging(
         async () => {
           return await prisma.prospect.update({

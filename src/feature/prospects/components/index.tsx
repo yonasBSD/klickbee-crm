@@ -10,6 +10,7 @@ import { useProspectsStore } from '../stores/useProspectsStore'
 import { useUserStore } from '../../user/store/userStore'
 import  ProspectModel from './ProspectModel'
 import Loading from '@/components/ui/Loading'
+import { DateConvertion } from '@/libs/utils/dateConvertion';
 
 export const prospectsColumns: TableColumn<Prospect>[] = [
   {
@@ -64,6 +65,18 @@ export const prospectsColumns: TableColumn<Prospect>[] = [
         </span>
       );
     },
+  },
+  {
+    key: 'lastContact',
+    title: 'Last Contact',
+    dataIndex: 'lastContact',
+    sortable: false,
+     render: (_val, record) => {
+               const dateString = (record as Prospect )?.lastContact;
+                 const time =  DateConvertion(dateString);
+                 const lastActivity = time === '-' ? time : `${time} - ${(record as Prospect)?.status}`
+                 return lastActivity
+             },
   },
   {
     key: 'tags',

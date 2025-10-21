@@ -99,3 +99,75 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
   }
 }
+
+export async function DELETE(req: Request) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const { userIds } = await req.json()
+
+    if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+      return NextResponse.json({ error: "User IDs array is required" }, { status: 400 })
+    }
+
+    // Validate that all IDs are strings
+    if (!userIds.every(id => typeof id === 'string' && id.trim().length > 0)) {
+      return NextResponse.json({ error: "All user IDs must be valid strings" }, { status: 400 })
+    }
+
+    // Check if any of the users to be deleted are the current user
+    if (userIds.includes(session.user.id)) {
+      return NextResponse.json({ error: "Cannot delete your own account" }, { status: 400 })
+    }
+
+    // Get previous data for activity logging
+    const getPreviousData = async () => {
+      return await prisma.user.findMany({
+        where: { id: { in: userIds } },
+        select: { id: true, email: true, name: true, status: true }
+      })
+    }
+
+    const previousUsers = await getPreviousData()
+
+    // Update all users to deleted status
+    const updatedUsers = await withActivityLogging(
+      async () => {
+        return await prisma.user.updateMany({
+          where: { id: { in: userIds } },
+          data: { status: 'Deleted' as any }
+        })
+      },
+      {
+        entityType: "User",
+        entityId: userIds.join(','),
+        action: ActivityAction.Delete,
+        userId: session.user.id,
+        getPreviousData: async () => previousUsers,
+        getCurrentData: async (result: any) => {
+          return await prisma.user.findMany({
+            where: { id: { in: userIds } },
+            select: { id: true, email: true, name: true, status: true }
+          })
+        },
+        metadata: { 
+          action: "bulk_delete",
+          deletedUserIds: userIds,
+          deletedUserCount: userIds.length
+        },
+      }
+    )
+
+    return NextResponse.json({ 
+      success: true, 
+      message: `Successfully marked ${updatedUsers.count} user(s) as deleted`,
+      deletedCount: updatedUsers.count 
+    })
+  } catch (err) {
+    console.error("DELETE /users error", err)
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
+  }
+}

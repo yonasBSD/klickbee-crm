@@ -11,6 +11,7 @@ enum userStatus {
   Active
   Inactive
   Invite
+  Deleted
 }
 
 model User {
@@ -37,6 +38,7 @@ model User {
   companiesByUser  Company[]  @relation("company_user")
   companiesByOwner Company[]  @relation("company_owner")
   activityLogs     ActivityLog[]
+  emailSettings    EmailSettings[]
 }
 
 enum DealStage {
@@ -55,23 +57,24 @@ enum Currency {
 }
 
 model Deal {
-  id        String    @id @default(uuid())
-  dealName  String
-  companyId String?
-  company   Company?  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  contactId String?
-  contact   Customer? @relation(fields: [contactId], references: [id], onDelete: Cascade)
-  stage     DealStage
-  amount    Float
-  currency  Currency
-  ownerId   String
-  owner     User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  closeDate DateTime?
-  tags      String[]  @default([])
-  notes     String?
-  files     Json?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id          String    @id @default(uuid())
+  dealName    String
+  companyId   String?
+  company     Company?  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  contactId   String?
+  contact     Customer? @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  stage       DealStage
+  amount      Float
+  currency    Currency
+  ownerId     String
+  owner       User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  closeDate   DateTime?
+  lastActivity DateTime?
+  tags        String[]  @default([])
+  notes       String?
+  files       Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@index([ownerId])
 }
@@ -179,21 +182,22 @@ enum ProspectStatus {
 }
 
 model Prospect {
-  id        String         @id @default(uuid())
-  userId    String
-  user      User           @relation("userId", fields: [userId], references: [id], onDelete: Cascade)
-  fullName  String
-  companyId String?
-  company   Company?       @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  email     String?
-  phone     String?
-  status    ProspectStatus @default(New)
-  tags      String[]       @default([])
-  notes     String?
-  ownerId   String
-  owner     User           @relation("ownerId", fields: [ownerId], references: [id], onDelete: Cascade)
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
+  id         String         @id @default(uuid())
+  userId     String
+  user       User           @relation("userId", fields: [userId], references: [id], onDelete: Cascade)
+  fullName   String
+  companyId  String?
+  company    Company?       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  email      String?
+  phone      String?
+  status     ProspectStatus @default(New)
+  lastContact DateTime?
+  tags       String[]       @default([])
+  notes      String?
+  ownerId    String
+  owner      User           @relation("ownerId", fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
 
   @@index([ownerId])
   @@index([userId])
@@ -206,23 +210,24 @@ enum CustomerStatus {
 }
 
 model Customer {
-  id        String         @id @default(uuid())
-  userId    String
-  user      User           @relation("customer_user", fields: [userId], references: [id], onDelete: Cascade)
-  fullName  String
-  companyId String?
-  company   Company?       @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  email     String?
-  phone     String?
-  status    CustomerStatus @default(Active)
-  tags      String[]       @default([])
-  notes     String?
-  files     Json?
-  ownerId   String
-  owner     User           @relation("customer_owner", fields: [ownerId], references: [id], onDelete: Cascade)
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
-  deals     Deal[]
+  id          String         @id @default(uuid())
+  userId      String
+  user        User           @relation("customer_user", fields: [userId], references: [id], onDelete: Cascade)
+  fullName    String
+  companyId   String?
+  company     Company?       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  email       String?
+  phone       String?
+  status      CustomerStatus @default(Active)
+  lastContact DateTime?
+  tags        String[]       @default([])
+  notes       String?
+  files       Json?
+  ownerId     String
+  owner       User           @relation("customer_owner", fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  deals       Deal[]
 
   @@index([ownerId])
   @@index([userId])
@@ -275,4 +280,19 @@ model ActivityLog {
 
   @@index([entityType, entityId])
   @@index([performedById])
+}
+
+model EmailSettings {
+  id        String   @id @default(uuid())
+  host      String
+  port      String
+  sender    String
+  username  String
+  password  String
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }

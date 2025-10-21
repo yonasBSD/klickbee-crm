@@ -3,6 +3,6 @@ export interface UserType {
   name:string
   registrationDate?: string
   lastLogin ?: string
-  status ?: 'Active' | 'Invite Send',
+  status ?: 'Active' | 'Inactive' | 'Invite' | 'Invite Sent' | 'Deleted',
   ownerImage:string
 }

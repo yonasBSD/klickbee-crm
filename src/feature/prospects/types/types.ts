@@ -5,6 +5,7 @@ export type Prospect = {
   email?: string | null;
   phone?: string | null;
   status: 'New' | 'Cold' | 'Qualified' | 'Warmlead' | 'Converted' | 'Notintrested';
+  lastContact?: string | null;
   tags?: string[];
   notes?: string | null;
   files?: Array<{ url: string; name: string; size: number }>;

@@ -1,26 +1,28 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/Button";
 import { Save, Loader2 } from "lucide-react";
 import { useEmailStore } from "../libs/emailStore";
 
 
 export default function EmailForm() {
-    const { settings, setSettings, saveSettings,  sendInvite, isLoading, error, resetError } = useEmailStore();
+    const { settings, setSettings, saveSettings, sendInvite, loadSettings, isSaving, isSendingTest, isLoadingSettings, error, resetError } = useEmailStore();
     const [testEmail, setTestEmail] = useState('');
-    const [inviteEmail, setInviteEmail] = useState('');
+
+    useEffect(() => {
+        loadSettings();
+    }, [loadSettings]);
 
 
-    const handleSendInvite = async () => {
-        if (inviteEmail && !isLoading) {
-            await sendInvite(inviteEmail);
-            setInviteEmail('');
+    const handleSaveSettings = async () => {
+        if (!isSaving && isFormValid()) {
+            await saveSettings();
         }
     };
 
     const handleSendTest = async () => {
-        if (testEmail && !isLoading) {
-            await (testEmail);
+        if (testEmail && !isSendingTest) {
+            await sendInvite(testEmail);
             setTestEmail('');
         }
     };
@@ -87,11 +89,11 @@ export default function EmailForm() {
 
                     <Button
                         className="whitespace-nowrap bg-black mt-4 w-auto"
-                        onClick={handleSendInvite}
-                        disabled={!isFormValid() || isLoading}
+                        onClick={handleSaveSettings}
+                        disabled={!isFormValid() || isSaving}
                     >
-                        {isLoading ? <Loader2 className="text-[#FAFAFA] h-4 w-4 animate-spin" /> : <Save className="text-[#FAFAFA] h-4 w-4" />}
-                        <span className="text-[#FAFAFA]">Save invite</span>
+                        {isSaving ? <Loader2 className="text-[#FAFAFA] h-4 w-4 animate-spin" /> : <Save className="text-[#FAFAFA] h-4 w-4" />}
+                        <span className="text-[#FAFAFA]">Save Settings</span>
                     </Button>
                 </div>
             </div>
@@ -111,9 +113,13 @@ export default function EmailForm() {
                     <Button
                         className="whitespace-nowrap bg-black mt-4"
                         onClick={handleSendTest}
-                        disabled={!testEmail || isLoading}
+                        disabled={!testEmail || isSendingTest}
                     >
-                        {isLoading ? <Loader2 className="text-[#FAFAFA] h-4 w-4 animate-spin" /> : <Save className="text-[#FAFAFA] h-4 w-4" />}
+                        {isSendingTest ? (
+                            <Loader2 className="text-[#FAFAFA] h-4 w-4 animate-spin" />
+                        ) : (
+                            <Save className="text-[#FAFAFA] h-4 w-4" />
+                        )}
                         <span className="text-[#FAFAFA]">Send Test</span>
                     </Button>
                 </div>

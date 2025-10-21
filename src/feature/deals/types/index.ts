@@ -8,13 +8,18 @@ export type Deal = {
   amount: number
   ownerImage?: string
   activity?: string
+  lastActivity?: string
   tags?: string
   closeDate?: string
   priority?: string
   notes?: string
-  attachments?: string[]
-  // Normalized for UI components and exports
-  owner: string
-  // Optional link to the actual owner user id if available from API
+  files?: { url: string; name?: string; size?: number; mimeType?: string }[];
+ 
   ownerId?: string
+  userId: string;
+  owner?: {
+    id: string;
+    name?: string;
+    email: string;
+  } | string;
 }

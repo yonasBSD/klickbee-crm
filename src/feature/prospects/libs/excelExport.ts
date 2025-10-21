@@ -15,6 +15,7 @@ export const exportProspectsToExcel = (prospects: Prospect[], filename?: string)
       'Email': prospect.email || '',
       'Phone': prospect.phone || '',
       'Status': prospect.status || '',
+      'Last Contact': prospect.lastContact ? new Date(prospect.lastContact).toLocaleDateString() : '',
       'Owner': typeof prospect.owner === 'object' && prospect.owner 
         ? (prospect.owner.name || prospect.owner.email) 
         : prospect.owner || 'Unknown',
@@ -35,6 +36,7 @@ export const exportProspectsToExcel = (prospects: Prospect[], filename?: string)
       { wch: 25 }, // Email
       { wch: 15 }, // Phone
       { wch: 15 }, // Status
+      { wch: 15 }, // Last Contact
       { wch: 15 }, // Owner
       { wch: 30 }, // Tags
       { wch: 40 }, // Notes
@@ -88,6 +90,7 @@ export const exportProspectsWithColumns = (
       email: 'Email',
       phone: 'Phone',
       status: 'Status',
+      lastContact: 'Last Contact',
       tags: 'Tags',
       notes: 'Notes',
       ownerId: 'Owner ID',
@@ -116,6 +119,7 @@ export const exportProspectsWithColumns = (
           case 'tags':
             value = Array.isArray(prospect.tags) ? prospect.tags.join(', ') : prospect.tags || '';
             break;
+          case 'lastContact':
           case 'createdAt':
           case 'updatedAt':
             value = value ? new Date(value as string).toLocaleDateString() : '';
