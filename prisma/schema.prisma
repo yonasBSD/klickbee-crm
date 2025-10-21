@@ -11,6 +11,7 @@ enum userStatus {
   Active
   Inactive
   Invite
+  Deleted
 }
 
 model User {
