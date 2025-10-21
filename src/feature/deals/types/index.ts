@@ -8,6 +8,7 @@ export type Deal = {
   amount: number
   ownerImage?: string
   activity?: string
+  lastActivity?: string
   tags?: string
   closeDate?: string
   priority?: string

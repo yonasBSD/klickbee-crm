@@ -168,6 +168,16 @@ export async function handleMethodWithId(req: Request, id: string) {
         });
         return deal;
       };
+
+      // Check if stage is being updated to set lastActivity
+      const previousDeal = await getPreviousData();
+      const isStageChanging = previousDeal && previousDeal.stage !== parsedData.stage;
+      
+      // Add lastActivity to data if stage is changing
+      if (isStageChanging) {
+        data.lastActivity = new Date();
+      }
+
       const updatedDeal = await withActivityLogging(
         async () => {
           return await prisma.deal.update({

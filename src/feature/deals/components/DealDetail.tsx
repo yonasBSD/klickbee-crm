@@ -56,6 +56,17 @@ export default function DealDetail({
     }
   };
 
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'Never';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   const details = [
     { label: 'Company', value: getCompanyName(deal.company) },
     { label: 'Contact', value: getContactName(deal.contact) },
@@ -72,6 +83,7 @@ export default function DealDetail({
     },
     deal.priority && { label: 'Tags', value: deal.priority },
     deal.date && { label: 'Closed Date', value: deal.date },
+    (deal as any).lastActivity && { label: 'Last Activity', value: formatDate((deal as any).lastActivity) },
 
   ].filter(Boolean) as { label: string; value: React.ReactNode }[];
 
