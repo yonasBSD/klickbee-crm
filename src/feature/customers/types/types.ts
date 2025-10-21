@@ -6,6 +6,7 @@ export type Customer = {
   email?: string;
   phone?: string;
   status: 'Active' | 'FollowUp' | 'inactive';
+  lastContact?: string;
   tags: string[];
   notes?: string;
   files?: Array<{ url: string; name: string; size: number }>;

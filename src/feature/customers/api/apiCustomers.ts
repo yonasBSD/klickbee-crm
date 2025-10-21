@@ -157,6 +157,15 @@ export async function handleMethodWithId(req: Request, id: string) {
         });
         return customer;
       };
+
+      // Check if company is being updated to set lastContact
+      const previousCustomer = await getPreviousData();
+      const isCompanyChanging = previousCustomer && previousCustomer.companyId !== parsedData.companyId;
+      
+      // Add lastContact to data if company is changing
+      if (isCompanyChanging) {
+        data.lastContact = new Date();
+      }
       const updatedCustomer = await withActivityLogging(
         async () => {
           return await prisma.customer.update({

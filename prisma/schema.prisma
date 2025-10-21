@@ -209,23 +209,24 @@ enum CustomerStatus {
 }
 
 model Customer {
-  id        String         @id @default(uuid())
-  userId    String
-  user      User           @relation("customer_user", fields: [userId], references: [id], onDelete: Cascade)
-  fullName  String
-  companyId String?
-  company   Company?       @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  email     String?
-  phone     String?
-  status    CustomerStatus @default(Active)
-  tags      String[]       @default([])
-  notes     String?
-  files     Json?
-  ownerId   String
-  owner     User           @relation("customer_owner", fields: [ownerId], references: [id], onDelete: Cascade)
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
-  deals     Deal[]
+  id          String         @id @default(uuid())
+  userId      String
+  user        User           @relation("customer_user", fields: [userId], references: [id], onDelete: Cascade)
+  fullName    String
+  companyId   String?
+  company     Company?       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  email       String?
+  phone       String?
+  status      CustomerStatus @default(Active)
+  lastContact DateTime?
+  tags        String[]       @default([])
+  notes       String?
+  files       Json?
+  ownerId     String
+  owner       User           @relation("customer_owner", fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  deals       Deal[]
 
   @@index([ownerId])
   @@index([userId])
