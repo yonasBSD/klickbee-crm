@@ -181,21 +181,22 @@ enum ProspectStatus {
 }
 
 model Prospect {
-  id        String         @id @default(uuid())
-  userId    String
-  user      User           @relation("userId", fields: [userId], references: [id], onDelete: Cascade)
-  fullName  String
-  companyId String?
-  company   Company?       @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  email     String?
-  phone     String?
-  status    ProspectStatus @default(New)
-  tags      String[]       @default([])
-  notes     String?
-  ownerId   String
-  owner     User           @relation("ownerId", fields: [ownerId], references: [id], onDelete: Cascade)
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
+  id         String         @id @default(uuid())
+  userId     String
+  user       User           @relation("userId", fields: [userId], references: [id], onDelete: Cascade)
+  fullName   String
+  companyId  String?
+  company    Company?       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  email      String?
+  phone      String?
+  status     ProspectStatus @default(New)
+  lastContact DateTime?
+  tags       String[]       @default([])
+  notes      String?
+  ownerId    String
+  owner      User           @relation("ownerId", fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
 
   @@index([ownerId])
   @@index([userId])

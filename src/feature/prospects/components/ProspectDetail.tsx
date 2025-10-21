@@ -70,6 +70,7 @@ export default function ProspectDetail({
     { label: "Company", value: prospect.company && typeof prospect.company === 'object' && 'fullName' in prospect.company ? (prospect.company as any).fullName ?? "-" : prospect.company ?? "-" },
     { label: "Email", value: prospect.email ?? "-" },
     { label: "Phone", value: prospect.phone ?? "-" },
+    { label: "Last Contact", value: prospect.lastContact ? new Date(prospect.lastContact).toLocaleDateString() : "-" },
     prospect.tags && prospect.tags.length > 0 && {
       label: "Tags",
       value: (

@@ -66,6 +66,16 @@ export const prospectsColumns: TableColumn<Prospect>[] = [
     },
   },
   {
+    key: 'lastContact',
+    title: 'Last Contact',
+    dataIndex: 'lastContact',
+    sortable: true,
+    render: (lastContact?: string | null) => {
+      if (!lastContact) return '-';
+      return new Date(lastContact).toLocaleDateString();
+    },
+  },
+  {
     key: 'tags',
     title: 'Tags',
     dataIndex: 'tags',
