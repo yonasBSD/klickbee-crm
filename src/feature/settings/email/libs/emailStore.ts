@@ -15,6 +15,7 @@ interface EmailStore {
   setSettings: (settings: Partial<EmailSettings>) => void;
   saveSettings: () => Promise<void>;
   sendInvite: (to: string) => Promise<void>;
+  loadSettings: () => Promise<void>;
   resetError: () => void;
 }
 
@@ -65,6 +66,24 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         throw new Error('Failed to send test email');
       }
       // Optionally handle response data here
+    } catch (error) {
+      set({ error: error instanceof Error ? error.message : 'An error occurred' });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+  loadSettings: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await fetch('/api/email', {
+        method: 'GET',
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.settings) {
+          set({ settings: data.settings });
+        }
+      }
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'An error occurred' });
     } finally {

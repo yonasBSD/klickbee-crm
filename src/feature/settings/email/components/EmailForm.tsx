@@ -1,26 +1,28 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/Button";
 import { Save, Loader2 } from "lucide-react";
 import { useEmailStore } from "../libs/emailStore";
 
 
 export default function EmailForm() {
-    const { settings, setSettings, saveSettings,  sendInvite, isLoading, error, resetError } = useEmailStore();
+    const { settings, setSettings, saveSettings, sendInvite, loadSettings, isLoading, error, resetError } = useEmailStore();
     const [testEmail, setTestEmail] = useState('');
-    const [inviteEmail, setInviteEmail] = useState('');
+
+    useEffect(() => {
+        loadSettings();
+    }, [loadSettings]);
 
 
-    const handleSendInvite = async () => {
-        if (inviteEmail && !isLoading) {
-            await sendInvite(inviteEmail);
-            setInviteEmail('');
+    const handleSaveSettings = async () => {
+        if (!isLoading && isFormValid()) {
+            await saveSettings();
         }
     };
 
     const handleSendTest = async () => {
         if (testEmail && !isLoading) {
-            await (testEmail);
+            await sendInvite(testEmail);
             setTestEmail('');
         }
     };
@@ -87,11 +89,11 @@ export default function EmailForm() {
 
                     <Button
                         className="whitespace-nowrap bg-black mt-4 w-auto"
-                        onClick={handleSendInvite}
+                        onClick={handleSaveSettings}
                         disabled={!isFormValid() || isLoading}
                     >
                         {isLoading ? <Loader2 className="text-[#FAFAFA] h-4 w-4 animate-spin" /> : <Save className="text-[#FAFAFA] h-4 w-4" />}
-                        <span className="text-[#FAFAFA]">Save invite</span>
+                        <span className="text-[#FAFAFA]">Save Settings</span>
                     </Button>
                 </div>
             </div>

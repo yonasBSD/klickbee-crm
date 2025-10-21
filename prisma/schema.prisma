@@ -37,6 +37,7 @@ model User {
   companiesByUser  Company[]  @relation("company_user")
   companiesByOwner Company[]  @relation("company_owner")
   activityLogs     ActivityLog[]
+  emailSettings    EmailSettings[]
 }
 
 enum DealStage {
@@ -275,4 +276,19 @@ model ActivityLog {
 
   @@index([entityType, entityId])
   @@index([performedById])
+}
+
+model EmailSettings {
+  id        String   @id @default(uuid())
+  host      String
+  port      String
+  sender    String
+  username  String
+  password  String
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
