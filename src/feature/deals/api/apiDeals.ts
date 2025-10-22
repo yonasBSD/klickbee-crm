@@ -102,7 +102,7 @@ export async function GET(req: Request) {
             },
           }
         : {}),
-
+      
     };
     const deals = await prisma.deal.findMany({
       where,
