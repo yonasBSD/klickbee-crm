@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Search } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useCompanyModalStore } from "@/feature/companies/stores/useCompanyModalStore";
+import { useCustomerModalStore } from "@/feature/customers/stores/useCustomersModel";
 
 interface Option {
   id: string;
@@ -33,7 +34,6 @@ export default function SearchableDropdown({
     return option ? option.label : val;
   };
 
-  const router = useRouter();
 
   const [query, setQuery] = useState(() => {
     const displayLabel = getDisplayLabel(value);
@@ -89,13 +89,14 @@ export default function SearchableDropdown({
                 key={option.id}
                 className="px-3 py-2 cursor-pointer text-sm hover:bg-gray-100"
               onMouseDown={() => {
-                if(option.value === "add-company") {
-                  router.push("/contact/companies?new=company");
-                }
+                if (option.value === "add-company") {
+                  // ✅ Instead of router.push, open modal via Zustand
+                  useCompanyModalStore.getState().openModal("add");
+                } 
                 if(option.value === "add-contact") {
-                  router.push("/contact/customers?new=contact");
-                }
-            // ✅ onMouseDown fires before onBlur, so selection works properly
+                      useCustomerModalStore.getState().openModal("add");
+                } 
+            // ✅ onMouseDown fires before onBlur, so selection wo  rks properly
             onChange(option.value);
             setQuery(option.label);
             setIsOpen(false);
