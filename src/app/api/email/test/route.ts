@@ -32,7 +32,7 @@ export async function POST(req: Request) {
         } else {
             // Get settings from database
             const dbSettings = await prisma.emailSettings.findFirst({
-                where: { ownerId: session.user.id }
+                where: { userId: session.user.id }
             });
             
             if (!dbSettings) {
