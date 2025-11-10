@@ -106,6 +106,9 @@ npm run dev
 
 The application runs at [localhost:3000](http://localhost:3000)
 
+---
+
+
 **Option 2 : Production Deployment**
 
 Clone the repo and install dependencies as above.
