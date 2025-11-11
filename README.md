@@ -14,7 +14,7 @@
 
 <h2 align="center"> 
   
-  [How does it looks like ?](https://www.figma.com/design/N4VAfIOJaAAtqzSjGbyFJ7/Klickbee--Community) 
+  [What does it looks like ?](https://www.figma.com/design/N4VAfIOJaAAtqzSjGbyFJ7/Klickbee--Community) 
   
 </h2>
 
