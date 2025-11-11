@@ -1,5 +1,5 @@
 <p align="center">
-<img src="https://i.ibb.co/rgvcjN4/Frame-17.png" alt="Logo" border="0" width="400">
+<img src="https://i.ibb.co/m5ZZ5B66/Dashboard.png" alt="Dashboard" border="0" width="400">
 </p>
 <h1 align="center">Klickbee CRM</h1>
 
