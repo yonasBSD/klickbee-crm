@@ -3,7 +3,7 @@
 
 <h1 align="center">
   
-  Due to GitHub Politics and the fact that [my account](https://github.com/JMauclair) has been recently suspended for no reasons, all our projects will be only on [Stralya Gitea](https://git.stralya.com/Klickbee/klickbee-crm)
+  Due to GitHub Politics and the fact that [JMauclair](https://github.com/JMauclair) has been recently suspended for no reasons, all our projects will be only on [Stralya Gitea](https://git.stralya.com/Klickbee/klickbee-crm)
 
   </h1>
 
