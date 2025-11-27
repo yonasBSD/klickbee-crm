@@ -12,11 +12,16 @@ import { Prospect } from "../types/types"
 import { getCompanyOptions } from "../libs/companyData"
 import TagInput from "@/components/ui/TagInput"
 import CustomDropdown from "@/components/ui/CustomDropdown"
+import {validateCompany, validateOwner} from "@/feature/forms/lib/formValidation";
 
 const prospectSchema = z.object({
     fullName: z.string().trim().min(1, "Full name is required"),
-    company: z.string().trim().min(1, "Company is required"),
-    email: z.string().trim().email("Please enter a valid email address"),
+    company: z.string().refine(async (id) => {
+        return await validateCompany(id);
+    }, {
+        message: "Company does not exist"
+    }),
+    email: z.email("Please enter a valid email address").trim(),
     phone: z.union([
         z
             .string()
@@ -31,8 +36,11 @@ const prospectSchema = z.object({
             (val) => ["New", "Qualified", "Converted", "Cold", "Warmlead", "Notintrested"].includes(val),
             { message: "Status is required" }
         ),
-    owner: z.string().trim().optional().or(z.literal("")),
-    tags: z.array(z.string().trim().min(1)).max(10, "Up to 10 tags allowed"),
+    owner: z.string().refine(async (id) => {
+        return await validateOwner(id);
+    }, {
+        message: "User does not exist"
+    }),    tags: z.array(z.string().trim().min(1)).max(10, "Up to 10 tags allowed"),
     notes: z.string().optional().or(z.literal("")),
 })
 

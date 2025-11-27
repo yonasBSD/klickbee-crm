@@ -17,7 +17,7 @@ import { Customer } from "../types/types"
 const customerSchema = z.object({
     fullName: z.string().trim().min(1, "Full name is required"),
     company: z.string().trim().min(1, "Company is required"),
-    email: z.string().trim().email("Please enter a valid email address"),
+    email: z.email("Please enter a valid email address"),
     phone: z.union([
         z.string().trim().regex(/^[\+]?[0-9\-\(\)\s]+$/, "Please enter a valid phone number"),
         z.literal(""),
@@ -26,10 +26,10 @@ const customerSchema = z.object({
         .string()
         .trim()
         .refine((val) => ["Active", "FollowUp", "inactive"].includes(val), { message: "Status is required" }),
-    owner: z.string().trim().optional().or(z.literal("")),
+    owner: z.string().trim(),
     tags: z.array(z.string().trim().min(1)).max(10, "Up to 10 tags"),
     notes: z.string().optional().or(z.literal("")),
-    files: z.array(z.instanceof(File)).optional().or(z.literal(undefined)).transform((val) => val ?? []),
+    files: z.array(z.instanceof(File)).optional(),
 })
 
 type CustomerFormValues = z.infer<typeof customerSchema>
@@ -87,10 +87,6 @@ export default function CustomerForm({
                 owner: (() => {
                     if (typeof initialData.owner === "object" && initialData.owner) {
                         return initialData.owner.id || ""
-                    }
-                    if (typeof initialData.owner === "string") {
-                        const option = userOptions.find((opt) => opt.id === initialData.owner)
-                        return option ? option.id : initialData.owner
                     }
                     return ""
                 })(),

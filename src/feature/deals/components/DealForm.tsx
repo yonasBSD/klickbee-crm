@@ -19,8 +19,8 @@ import { Deal } from "../types"
 
 const dealSchema = z.object({
     dealName: z.string().trim().min(1, "Deal Name is required"),
-    company: z.string().trim().optional().or(z.literal("")),
-    contact: z.string().trim().optional().or(z.literal("")),
+    company: z.string().trim().or(z.literal("")),
+    contact: z.string().trim().or(z.literal("")),
     stage: z
         .string()
         .trim()
@@ -29,16 +29,16 @@ const dealSchema = z.object({
         }),
     amount: z
         .union([
-            z.number({ invalid_type_error: "Enter a valid number" }),
+            z.number({ error: "Enter a valid number" }),
             z.nan().transform(() => 0),
         ])
         .refine((val) => val >= 0, { message: "Amount cannot be negative" }),
-    currency: z.enum(["USD", "EUR", "GBP"], { required_error: "Currency is required" }),
-    owner: z.string().trim().optional().or(z.literal("")),
+    currency: z.enum(["USD", "EUR", "GBP"], { error: "Currency is required" }),
+    owner: z.string().trim().or(z.literal("")),
     closeDate: z.string().optional().or(z.literal("")),
     tags: z.array(z.string().trim().min(1)).max(10, "Up to 10 tags"),
     notes: z.string().optional().or(z.literal("")),
-    files: z.array(z.instanceof(File)).optional().or(z.literal(undefined)).transform((val) => val ?? []),
+    files: z.array(z.instanceof(File)).optional(),
 })
 
 type DealFormValues = z.infer<typeof dealSchema>
