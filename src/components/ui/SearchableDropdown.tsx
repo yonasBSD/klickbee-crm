@@ -3,6 +3,7 @@ import { Search } from "lucide-react";
 import { useCompanyModalStore } from "@/feature/companies/stores/useCompanyModalStore";
 import { useCustomerModalStore } from "@/feature/customers/stores/useCustomersModel";
 import { useCompaniesStore } from "@/feature/companies/stores/useCompaniesStore";
+import { useCustomersStore } from "@/feature/customers/stores/useCustomersStore";
 
 interface Option {
   id: string;
@@ -42,10 +43,12 @@ export default function SearchableDropdown({
   });
   const [isOpen, setIsOpen] = useState(false);
   const [isAddingCompany, setIsAddingCompany] = useState(false);
+  const [isAddingContact, setIsAddingContact] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Subscribe to lastCompanyId from companies store to auto-select newly created company
   const lastCompanyId = useCompaniesStore(state => state.lastCompanyId);
+  const lastContactId = useCustomersStore(state => state.lastContactId);
 
   // ✅ Sync query state with value prop changes
   useEffect(() => {
@@ -71,6 +74,22 @@ export default function SearchableDropdown({
     setIsAddingCompany(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastCompanyId]);
+
+  // When we opened the add-contact modal and lastContactId is set, select it
+  useEffect(() => {
+    if (!isAddingContact) return;
+    if (!lastContactId) return;
+
+    const createdOption = options.find(o => o.id === lastContactId || o.value === lastContactId);
+    if (createdOption) {
+      onChange(lastContactId);
+      setQuery(createdOption.label);
+      setIsOpen(false);
+    }
+
+    setIsAddingContact(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastContactId]);
 
   const filteredOptions = options
     .filter((opt) => opt.label.toLowerCase().includes(query.toLowerCase()))
@@ -118,10 +137,11 @@ export default function SearchableDropdown({
                   setIsAddingCompany(true);
                   // ✅ Instead of router.push, open modal via Zustand
                   useCompanyModalStore.getState().openModal("add");
-                } 
+                }
                 if(option.value === "add-contact") {
+                      setIsAddingContact(true);
                       useCustomerModalStore.getState().openModal("add");
-                } 
+                }
             // ✅ onMouseDown fires before onBlur, so selection works properly
             onChange(option.value);
             setQuery(option.label);

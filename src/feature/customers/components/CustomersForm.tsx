@@ -59,6 +59,7 @@ export default function CustomerForm({
     const [tagInput, setTagInput] = useState("")
     const [uploading, setUploading] = useState(false)
     const [uploadedFiles, setUploadedFiles] = useState<any[]>([])
+    const { lastCompanyId } = useCompaniesStore()
 
     useEffect(() => {
         useCompaniesStore.getState().fetchCompanies()
@@ -118,7 +119,7 @@ export default function CustomerForm({
 
         return {
             fullName: "",
-            company: "",
+            company: lastCompanyId || "",
             email: "",
             status: "",
             phone: "",
@@ -136,7 +137,7 @@ export default function CustomerForm({
 
     useEffect(() => {
         reset(getInitialValues())
-    }, [initialData, mode, userOptions, reset])
+    }, [initialData, mode, userOptions, lastCompanyId, reset])
 
     const values = watch()
 

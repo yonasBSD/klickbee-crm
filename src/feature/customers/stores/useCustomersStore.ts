@@ -16,6 +16,7 @@ interface CustomerStore {
   error: string | null;
   filters: FilterData;
   searchTerm: string;
+  lastContactId: string;
 
   fetchCustomers: (ownerId?: string) => Promise<void>;
   setSearchTerm: (search: string) => void;
@@ -43,6 +44,7 @@ export const useCustomersStore = create<CustomerStore>((set, get) => ({
   isEditing: false,
   isExporting: false,
   error: null,
+  lastContactId: "",
   filters: {
     status: [
       { id: "all", label: "All Status", checked: true },
@@ -223,7 +225,7 @@ export const useCustomersStore = create<CustomerStore>((set, get) => ({
       }
 
       const created: Customer = await res.json();
-      set({ customers: [...get().customers, created] });
+      set({ customers: [...get().customers, created], lastContactId: created.id });
       get().applyFilters();
       toast.success("Customer created successfully!");
     } catch (err: any) {
