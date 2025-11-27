@@ -11,6 +11,7 @@ import UploadButton from "@/components/ui/UploadButton"
 import SearchableDropdown from "@/components/ui/SearchableDropdown"
 import {Company} from "../types/types"
 import CustomDropdown from "@/components/ui/CustomDropdown"
+import {validateOwner} from "@/feature/forms/lib/formValidation"
 
 type CompanyFormValues = z.infer<typeof zodSchema>;
 
@@ -28,7 +29,13 @@ const zodSchema = z.object({
             z.literal(""), // chaîne vide acceptée
             z.string().regex(/^\+?[0-9]{6,15}$/, { message: "Invalid phone number" })
         ])
-        .optional(),    owner: z.string().optional(),
+        .optional(),
+    owner: z
+        .string()
+        .optional()
+        .refine(async (id) => !id || (await validateOwner(id)), {
+            message: "User does not exist",
+        }),
     tags: z.array(z.string().min(1)).max(10, "Up to 10 tags allowed").optional(),
     assign: z.array(z.string().min(1)).max(10, "Up to 10 assignments allowed").optional(),
     notes: z.string().optional(),
