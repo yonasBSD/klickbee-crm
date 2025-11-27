@@ -13,10 +13,14 @@ import CustomDropdown from "@/components/ui/CustomDropdown"
 import { useCompaniesStore } from "@/feature/companies/stores/useCompaniesStore"
 import { getCompanyOptions } from "@/feature/deals/libs/companyData"
 import { Customer } from "../types/types"
+import { validateCompany, validateOwner } from "@/feature/forms/lib/formValidation"
 
 const customerSchema = z.object({
     fullName: z.string().trim().min(1, "Full name is required"),
-    company: z.string().trim().min(1, "Company is required"),
+    company: z
+        .string()
+        .trim()
+        .refine(async (id) => await validateCompany(id), { message: "Company does not exist" }),
     email: z.email("Please enter a valid email address"),
     phone: z.union([
         z.string().trim().regex(/^[\+]?[0-9\-\(\)\s]+$/, "Please enter a valid phone number"),
@@ -26,7 +30,10 @@ const customerSchema = z.object({
         .string()
         .trim()
         .refine((val) => ["Active", "FollowUp", "inactive"].includes(val), { message: "Status is required" }),
-    owner: z.string().trim(),
+    owner: z
+        .string()
+        .trim()
+        .refine(async (id) => await validateOwner(id), { message: "User does not exist" }),
     tags: z.array(z.string().trim().min(1)).max(10, "Up to 10 tags"),
     notes: z.string().optional().or(z.literal("")),
     files: z.array(z.instanceof(File)).optional(),
