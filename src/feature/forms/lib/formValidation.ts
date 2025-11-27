@@ -18,7 +18,20 @@ export async function validateOwner(idUser: string): Promise<boolean> {
             method: "GET",
             cache: "no-store"
         });
-        console.log(res)
+        return res.ok; // 200 → ok, 404 → false
+    } catch (e) {
+        console.error(e);
+        return false;
+    }
+}
+
+export async function validateContact(idContact: string): Promise<boolean> {
+    try {
+        const res = await fetch(`/api/admin/contacts/${idContact}`, {
+            method: "GET",
+            cache: "no-store",
+        });
+
         return res.ok; // 200 → ok, 404 → false
     } catch (e) {
         console.error(e);
