@@ -16,11 +16,18 @@ import { getCompanyOptions, getContactOptions } from "../libs/companyData"
 import { useCompaniesStore } from "@/feature/companies/stores/useCompaniesStore"
 import { useCustomersStore } from "@/feature/customers/stores/useCustomersStore"
 import { Deal } from "../types"
+import { validateCompany, validateContact, validateOwner } from "@/feature/forms/lib/formValidation"
 
 const dealSchema = z.object({
     dealName: z.string().trim().min(1, "Deal Name is required"),
-    company: z.string().trim().or(z.literal("")),
-    contact: z.string().trim().or(z.literal("")),
+    company: z
+        .string()
+        .trim()
+        .refine(async (id) => !id || (await validateCompany(id)), { message: "Company does not exist" }),
+    contact: z
+        .string()
+        .trim()
+        .refine(async (id) => !id || (await validateContact(id)), { message: "Contact does not exist" }),
     stage: z
         .string()
         .trim()
@@ -34,7 +41,10 @@ const dealSchema = z.object({
         ])
         .refine((val) => val >= 0, { message: "Amount cannot be negative" }),
     currency: z.enum(["USD", "EUR", "GBP"], { error: "Currency is required" }),
-    owner: z.string().trim().or(z.literal("")),
+    owner: z
+        .string()
+        .trim()
+        .refine(async (id) => !id || (await validateOwner(id)), { message: "User does not exist" }),
     closeDate: z.string().optional().or(z.literal("")),
     tags: z.array(z.string().trim().min(1)).max(10, "Up to 10 tags"),
     notes: z.string().optional().or(z.literal("")),
