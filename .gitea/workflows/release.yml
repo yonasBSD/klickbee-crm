@@ -30,4 +30,4 @@ jobs:
           GIT_COMMITTER_NAME: "Semantic Release Bot"
           GIT_COMMITTER_EMAIL: "bot@stralya.com"
         run: |
-          npx semantic-release --config .releaserc.gitea.json
+          npx semantic-release --extends .releaserc.gitea.json
